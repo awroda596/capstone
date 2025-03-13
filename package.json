@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/awroda596/capstone#readme",
   "dependencies": {
+    "capstone": "file:",
     "puppeteer": "^24.2.1"
   }
 }
