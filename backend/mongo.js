@@ -63,16 +63,23 @@ const User = mongoose.model('User', userSchema);
 
 
 async function pushTeas(teas) {
-  console.log("Pushing teas to MongoDB..."); 
+  console.log("Upserting teas to MongoDB...");
   try {
     for (let tea of teas) {
-      console.log(`Pushing tea: ${JSON.stringify(tea)}`);
-      const teaDoc = new Tea(tea);
-      await teaDoc.save();
+      console.log(`Upserting tea: ${JSON.stringify(tea)}`);
+      await Tea.findOneAndUpdate(
+        { name: tea.name }, // Match by name
+        { 
+          name: tea.name,
+          link: tea.link,
+          vendor: tea.vendor,
+          price: tea.price 
+        }, // Update fields
+        { upsert: true, new: true } // Create if not exists, return the new document
+      );
     }
-  }
-  catch (error) {
-    console.error("Error pushing teas to MongoDB:", error);
+  } catch (error) {
+    console.error("Error upserting teas to MongoDB:", error);
   }
 }
 

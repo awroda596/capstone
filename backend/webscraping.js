@@ -3,63 +3,65 @@ const { pushTeas } = require('./mongo');
 
 async function scrapeInit() {
   // Launch browser
-  
+
 
   // List of URLs to scrape
 
 
   // Loop through each category URL
   let accumTeas = [];
-  await redblossomtea(accumTeas);
-  await ecoCha(accumTeas);
+  accumTeas = accumTeas.concat(await redblossomtea());
+  accumTeas = accumTeas.concat(await ecoCha());
+
   return accumTeas;
 }
 
-async function redblossomtea(accumTeas)
-{
-  const browser = await chromium.launch({ headless: true }); 
+async function redblossomtea() {
+  const browser = await chromium.launch({ headless: true });
   const urls = [
-    // 'https://redblossomtea.com/collections/oolong',
-      'https://redblossomtea.com/collections/white',
-    // 'https://redblossomtea.com/collections/black',
-     //'https://redblossomtea.com/collections/pu-erh',
-     //'https://redblossomtea.com/collections/green',
-   ];
+    'https://redblossomtea.com/collections/oolong',
+    'https://redblossomtea.com/collections/white',
+    'https://redblossomtea.com/collections/black',
+    'https://redblossomtea.com/collections/pu-erh',
+    'https://redblossomtea.com/collections/green',
+  ];
+  let rbTeas = [];
   for (let url of urls) {
     let pageNum = 1;
     const page = await browser.newPage();
     await page.goto(url);
     //while looping through pages for url
+
     while (true) {
       await page.waitForSelector('.product');
       let type = null;
       switch (true) {
         case url.includes('oolong'):
-        type = 'oolong';
-        break;
+          type = 'oolong';
+          break;
         case url.includes('white'):
-        type = 'white';
-        break;
+          type = 'white';
+          break;
         case url.includes('black'):
-        type = 'black';
-        break;
+          type = 'black';
+          break;
         case url.includes('green'):
-        type = 'green';
-        break;
+          type = 'green';
+          break;
         case url.includes('pu-erh'):
-        type = 'pu-erh';
-        break;
+          type = 'pu-erh';
+          break;
       }
       const teas = await page.$$eval('.product', (productElements, type) => {
         return productElements
           .map((productElement) => {
-        const nameElement = productElement.querySelector('.product-card-details .title a');
-        const priceElement = productElement.querySelector('.product-card-details .price .money');
-        const name = nameElement ? nameElement.textContent.trim() : null;
-        const link = nameElement ? nameElement.href : null;
-        const price = priceElement ? priceElement.textContent.trim() : null;
-
-        return { name, type, link, price };
+            const nameElement = productElement.querySelector('.product-card-details .title a');
+            const priceElement = productElement.querySelector('.product-card-details .price .money');
+            const name = nameElement ? nameElement.textContent.trim() : null;
+            const link = nameElement ? nameElement.href : null;
+            const price = priceElement ? priceElement.textContent.trim() : null;
+            const vendor = 'Red Blossom Tea Company';
+            return { name, type, vendor, link, price };
           })
           .filter(tea => tea.name && !tea.name.toLowerCase().includes('collection')); // Filter out products with "collection" in the title
       }, type);
@@ -145,15 +147,15 @@ async function redblossomtea(accumTeas)
         }//if tea has link
       }
       */
-      accumTeas = accumTeas.concat(teas);
+      rbTeas = rbTeas.concat(teas);
 
       // check for next page
       const nextPageLink = await page.$('.pagination li.next a');  // Check for the <a> inside <li class="next">
       if (nextPageLink) {
         console.log('checking for next page');
         const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);  // Get the href of the Next link
-        await page.goto(nextPageUrl);  
-        pageNum++; 
+        await page.goto(nextPageUrl);
+        pageNum++;
         console.log(`Navigating to page ${pageNum}...`);
         const currentUrl = await page.url();
         console.log('Current page URL:', currentUrl);
@@ -166,64 +168,70 @@ async function redblossomtea(accumTeas)
     await page.close(); // Close the current page after scraping
   }
 
-  await browser.close(); 
+  await browser.close();
+  return rbTeas;
 }
-async function ecoCha(accumTeas)
-{
-  const browser = await chromium.launch({ headless: true }); 
+
+async function ecoCha() {
+  const browser = await chromium.launch({ headless: true });
   const urls = [
     'https://eco-cha.com/collections/taiwan-oolong-tea',
     'https://eco-cha.com/collections/green-tea',
-    'https://eco-cha.com/collections/taiwan-black-tea'
-   ];
+    //'https://eco-cha.com/collections/taiwan-black-tea'
+  ];
+  let ecoTeas = [];
   for (let url of urls) {
     let pageNum = 1;
     const page = await browser.newPage();
     await page.goto(url);
-
     //while looping through pages for url
-    while (true) {      
-      await page.waitForSelector('.product-thumbnail');
+
+    while (true) {
+      await page.waitForSelector('main#main-content .collection-page__list');
       let type = null;
       switch (true) {
         case url.includes('oolong'):
-        type = 'oolong';
-        break;
+          type = 'oolong';
+          break;
         case url.includes('white'):
-        type = 'white';
-        break;
+          type = 'white';
+          break;
         case url.includes('black'):
-        type = 'black';
-        break;
+          type = 'black';
+          break;
         case url.includes('green'):
-        type = 'green';
-        break;
+          type = 'green';
+          break;
         case url.includes('pu-erh'):
-        type = 'pu-erh';
-        break;
+          type = 'pu-erh';
+          break;
       }
-      const teas = await page.$$eval('.product', (productElements, type) => {
+      const teas = await page.$$eval('main#main-content .collection-page__content .collection-page__list .product-thumbnail', (productElements, type) => {
         return productElements
           .map((productElement) => {
-        const nameElement = productElement.querySelector('.product-card-details .title a');
-        const priceElement = productElement.querySelector('.product-card-details .price .money');
-        const name = nameElement ? nameElement.textContent.trim() : null;
-        const link = nameElement ? nameElement.href : null;
-        const price = priceElement ? priceElement.textContent.trim() : null;
+            const nameElement = productElement.querySelector('.product-thumbnail__title');
+            const priceElement = productElement.querySelector('.product-thumbnail__price .money');
 
-        return { name, type, link, price };
+            const name = nameElement ? nameElement.textContent.trim() : null;
+            const link = nameElement ? nameElement.href : null;
+            const price = priceElement ? priceElement.textContent.trim() : null;
+            const vendor = 'Eco-Cha';
+            return { name, type, vendor,link, price };
           })
-          .filter(tea => tea.name && !tea.name.toLowerCase().includes('collection')); // Filter out products with "collection" in the title
+          .filter(tea => tea.name && !tea.name.toLowerCase().includes('Sampler')); // Filter out products with "collection" in the title
       }, type);
-      accumTeas = accumTeas.concat(teas);
+      ecoTeas = ecoTeas.concat(teas);
+      for (let tea of teas) {
+        console.log(`Scraped Tea:`, tea);
+      }
 
       // check for next page
       const nextPageLink = await page.$('.pagination li.next a');  // Check for the <a> inside <li class="next">
       if (nextPageLink) {
         console.log('checking for next page');
         const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);  // Get the href of the Next link
-        await page.goto(nextPageUrl);  
-        pageNum++; 
+        await page.goto(nextPageUrl);
+        pageNum++;
         console.log(`Navigating to page ${pageNum}...`);
         const currentUrl = await page.url();
         console.log('Current page URL:', currentUrl);
@@ -235,8 +243,12 @@ async function ecoCha(accumTeas)
     }
     await page.close(); // Close the current page after scraping
   }
-
-  await browser.close(); 
+  // Filter out duplicates based on the tea name and link
+  ecoTeas = ecoTeas.filter((tea, index, self) =>
+    index === self.findIndex(t => t.name === tea.name && t.link === tea.link)
+  );
+  await browser.close();
+  return ecoTeas;
 }
 
-module.exports = { scrapeInit};
+module.exports = { scrapeInit };

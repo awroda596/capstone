@@ -33,6 +33,7 @@ async function startServer() {
 
     // initial scrape and push
     let iteas = await scrapeInit();
+    console.log(iteas);
     await pushTeas(iteas);
     //set up recurring scrape
     const SCRAPE_INTERVAL = 24 * 60 * 60 * 1000; // Scrape every 24 hours
