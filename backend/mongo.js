@@ -3,19 +3,15 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 
-const uri = "mongodb://localhost:27017"; // MongoDB connection string
+const uri = "mongodb://localhost:27017/testdb"; // MongoDB connection string
 
 const client = new MongoClient(uri);
-let teaDB = null;
 
 async function connectDB() {
   try {
-    await client.connect();
-    console.log("Connected to MongoDB");
-
-    const db = client.db("TeaDB"); // Replace with your database name
-    teaDB = db;
-    return
+    await mongoose.connect(uri, {
+    });
+    console.log("Connected to MongoDB with Mongoose");
   } catch (error) {
     console.error("MongoDB connection error:", error);
   }
@@ -70,6 +66,7 @@ async function pushTeas(teas) {
   console.log("Pushing teas to MongoDB..."); 
   try {
     for (let tea of teas) {
+      console.log(`Pushing tea: ${JSON.stringify(tea)}`);
       const teaDoc = new Tea(tea);
       await teaDoc.save();
     }

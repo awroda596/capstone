@@ -2,7 +2,7 @@ const express = require('express');
 const { connectDB } = require('./mongo');  // Import the connectDB function
 const {pushTeas} = require('./mongo');  // Import the pushTeas function
 const { getTeas } = require('./mongo');  // Import the getTeas function
-const { scrape } = require('./webscraping');  // Import the webScraper function
+const { scrapeInit } = require('./webscraping');  // Import the webScraper function
 const app = express();
 const {teaDB} = require('./mongo');
 
@@ -32,12 +32,12 @@ async function startServer() {
     });
 
     // initial scrape and push
-    let iteas = await scrape();
+    let iteas = await scrapeInit();
     await pushTeas(iteas);
     //set up recurring scrape
     const SCRAPE_INTERVAL = 24 * 60 * 60 * 1000; // Scrape every 24 hours
     setInterval(async () => {
-      let teas = await scrape(); // Run scraping asynchronously
+      let teas = await scrapeInit(); // Run scraping asynchronously
       await pushTeas(teas); // Push the scraped teas to the database
     }, SCRAPE_INTERVAL);
 
