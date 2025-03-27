@@ -1,5 +1,12 @@
 const { chromium } = require('playwright');
-const { pushTeas } = require('./mongo');
+
+const teaTypes = [
+  { key: 'oolong', value: 'oolong' },
+  { key: 'white', value: 'white' },
+  { key: 'black', value: 'black' },
+  { key: 'green', value: 'green' },
+  { key: ['puerh', 'pu-erh'], value: 'pu-erh' },
+];
 
 async function scrapeInit() {
   // Launch browser
@@ -10,6 +17,8 @@ async function scrapeInit() {
 
   // Loop through each category URL
   let accumTeas = [];
+  let failedUrls = [];
+  
   accumTeas = accumTeas.concat(await redblossomtea());
   accumTeas = accumTeas.concat(await ecoCha());
 
@@ -27,15 +36,20 @@ async function redblossomtea() {
   ];
   let rbTeas = [];
   for (let url of urls) {
+    try{
+
+    
     let pageNum = 1;
     const page = await browser.newPage();
+
     await page.goto(url);
+    
     //while looping through pages for url
 
     while (true) {
       await page.waitForSelector('.product');
       let type = null;
-      switch (true) {
+      switch (url) {
         case url.includes('oolong'):
           type = 'oolong';
           break;
@@ -68,85 +82,7 @@ async function redblossomtea() {
       for (let tea of teas) {
         console.log(`Scraped Tea:`, tea);
       }
-      /*
-      for (let tea of teas) {
-        if (tea.link) {
-          const productPage = await browser.newPage();
-          await productPage.goto(tea.link);
 
-          console.log(`Navi      await page.waitForSelector('.product');
-      let type = null;
-      switch (true) {
-        case url.includes('oolong'):
-        type = 'oolong';
-        break;
-        case url.includes('white'):
-        type = 'white';
-        break;
-        case url.includes('black'):
-        type = 'black';
-        break;
-        case url.includes('green'):
-        type = 'green';
-        break;
-        case url.includes('pu-erh'):
-        type = 'pu-erh';
-        break;
-      }
-      const teas = await page.$$eval('.product', (productElements, type) => {
-        return productElements
-          .map((productElement) => {
-        const nameElement = productElement.querySelector('.product-card-details .title a');
-        const priceElement = productElement.querySelector('.product-card-details .price .money');
-        const name = nameElement ? nameElement.textContent.trim() : null;
-        const link = nameElement ? nameElement.href : null;
-        const price = priceElement ? priceElement.textContent.trim() : null;
-
-        return { name, type, link, price };
-          })
-          .filter(tea => tea.name && !tea.name.toLowerCase().includes('collection')); // Filter out products with "collection" in the title
-      }, type);gating to ${tea.link} for ${tea.name}...`);
-          await productPage.waitForSelector('.product-details');
-
-          try {
-            const origin = await productPage.$eval(
-              '.tea-description-container .tea-description td:nth-child(2) span:last-child',
-              el => el.textContent.trim()
-            ).catch(() => "Unknown");;
-
-            const notes = await productPage.$eval(
-              '.tea-description-container .tea-description td:nth-child(4) span:last-child',
-              el => el.textContent.trim()
-            ).catch(() => "Unknown");;
-
-            /*
-            const description = await productPage.$$eval(
-              '#p-des-shortcut .module.description .rte .tabs-content li p', 
-              (paragraphs) => {
-                // Join all paragraphs found with a period and space, or return "Unknown" if none found
-                return paragraphs.length > 0 
-                  ? paragraphs.map((p) => p.textContent.trim()).join('. ') 
-                  : "Unknown";
-              }
-            ).catch(() => "Unknown");
-            
-
-            tea.origin = origin;
-            tea.notes = notes;
-            tea.description = '';
-            tea.vendor = 'Red Blossom Tea Company';
-            tea.reviews = [];
-            console.log(`Scraped Tea:`, tea);
-
-          } catch (error) {
-            console.error(`Error scraping product ${tea.link}:`, error);
-          }
-
-          await productPage.close(); 
-
-        }//if tea has link
-      }
-      */
       rbTeas = rbTeas.concat(teas);
 
       // check for next page
@@ -166,8 +102,13 @@ async function redblossomtea() {
       }
     }
     await page.close(); // Close the current page after scraping
+    }
+    catch (error) {
+      console.error(`Error scraping ${url}:`, error);
+      failedUrls.push(url);
+    }
   }
-
+  
   await browser.close();
   return rbTeas;
 }
@@ -252,3 +193,83 @@ async function ecoCha() {
 }
 
 module.exports = { scrapeInit };
+
+      /*
+      for (let tea of teas) {
+        if (tea.link) {
+          const productPage = await browser.newPage();
+          await productPage.goto(tea.link);
+
+          console.log(`Navi      await page.waitForSelector('.product');
+      let type = null;
+      switch (true) {
+        case url.includes('oolong'):
+        type = 'oolong';
+        break;
+        case url.includes('white'):
+        type = 'white';
+        break;
+        case url.includes('black'):
+        type = 'black';
+        break;
+        case url.includes('green'):
+        type = 'green';
+        break;
+        case url.includes('pu-erh'):
+        type = 'pu-erh';
+        break;
+      }
+      const teas = await page.$$eval('.product', (productElements, type) => {
+        return productElements
+          .map((productElement) => {
+        const nameElement = productElement.querySelector('.product-card-details .title a');
+        const priceElement = productElement.querySelector('.product-card-details .price .money');
+        const name = nameElement ? nameElement.textContent.trim() : null;
+        const link = nameElement ? nameElement.href : null;
+        const price = priceElement ? priceElement.textContent.trim() : null;
+
+        return { name, type, link, price };
+          })
+          .filter(tea => tea.name && !tea.name.toLowerCase().includes('collection')); // Filter out products with "collection" in the title
+      }, type);gating to ${tea.link} for ${tea.name}...`);
+          await productPage.waitForSelector('.product-details');
+
+          try {
+            const origin = await productPage.$eval(
+              '.tea-description-container .tea-description td:nth-child(2) span:last-child',
+              el => el.textContent.trim()
+            ).catch(() => "Unknown");;
+
+            const notes = await productPage.$eval(
+              '.tea-description-container .tea-description td:nth-child(4) span:last-child',
+              el => el.textContent.trim()
+            ).catch(() => "Unknown");;
+
+            /*
+            const description = await productPage.$$eval(
+              '#p-des-shortcut .module.description .rte .tabs-content li p', 
+              (paragraphs) => {
+                // Join all paragraphs found with a period and space, or return "Unknown" if none found
+                return paragraphs.length > 0 
+                  ? paragraphs.map((p) => p.textContent.trim()).join('. ') 
+                  : "Unknown";
+              }
+            ).catch(() => "Unknown");
+            
+
+            tea.origin = origin;
+            tea.notes = notes;
+            tea.description = '';
+            tea.vendor = 'Red Blossom Tea Company';
+            tea.reviews = [];
+            console.log(`Scraped Tea:`, tea);
+
+          } catch (error) {
+            console.error(`Error scraping product ${tea.link}:`, error);
+          }
+
+          await productPage.close(); 
+
+        }//if tea has link
+      }
+      */

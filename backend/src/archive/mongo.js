@@ -1,3 +1,4 @@
+//deprecated file, split into appropriate individual files in models, config, services
 const { MongoClient } = require("mongodb");
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');

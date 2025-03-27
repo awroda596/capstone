@@ -1,10 +1,10 @@
 const express = require('express');
-const { connectDB } = require('./mongo');  // Import the connectDB function
-const {pushTeas} = require('./mongo');  // Import the pushTeas function
-const { getTeas } = require('./mongo');  // Import the getTeas function
-const { scrapeInit } = require('./webscraping');  // Import the webScraper function
+const { connectDB } = require('./src/mongo');  // Import the connectDB function
+const {pushTeas} = require('./src/mongo');  // Import the pushTeas function
+const { getTeas } = require('./src/mongo');  // Import the getTeas function
+const { scrapeInit } = require('./src/services/webscraping');  // Import the webScraper function
 const app = express();
-const {teaDB} = require('./mongo');
+const {teaDB} = require('./src/mongo');
 
 
 async function startServer() {
