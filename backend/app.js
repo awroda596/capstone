@@ -1,11 +1,25 @@
 const express = require('express');
-const { connectDB } = require('./src/mongo');  // Import the connectDB function
-const {pushTeas} = require('./src/mongo');  // Import the pushTeas function
-const { getTeas } = require('./src/mongo');  // Import the getTeas function
+const { connectDB } = require('./src/config/db');  // Import the connectDB function
+const {pushTeas} = require('./src/services/tea.service');  // Import the pushTeas function
 const { scrapeInit } = require('./src/services/webscraping');  // Import the webScraper function
 const app = express();
-const {teaDB} = require('./src/mongo');
 
+
+async function scrapeAndPushTeas(){
+  let teas = [];
+  try {
+    console.log('Starting web scraping...');
+    teas = await scrapeInit();
+  } catch (error) {
+    console.error('Error during scraping or database update:', error);
+  }
+  try {
+    await pushTeas(teas);
+    console.log('Database updated successfully.');
+  } catch(error) {
+    console.error('Error updating database:', error);
+  }
+}
 
 async function startServer() {
   try {
@@ -25,12 +39,6 @@ async function startServer() {
         res.status(500).json({ error: 'Failed to retrieve teas' });
       }
     });
-    
-
-    app.listen(3000, () => {
-      console.log('Server is running on http://localhost:3000');
-    });
-
     // initial scrape and push
     let iteas = await scrapeInit();
     console.log(iteas);
@@ -41,17 +49,15 @@ async function startServer() {
       let teas = await scrapeInit(); // Run scraping asynchronously
       await pushTeas(teas); // Push the scraped teas to the database
     }, SCRAPE_INTERVAL);
-
-
     
   } catch (error) {
-    console.error('Error starting server:', error);
+    console.error('Error:', error);
   }
-
-
 }
 
-startServer();
+app.listen(3000, () => {
+  console.log('Server is running on http://localhost:3000');
+});
 
 // set up scraping
 
