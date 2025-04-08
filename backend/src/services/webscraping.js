@@ -21,6 +21,7 @@ async function scrapeInit() {
   
   accumTeas = accumTeas.concat(await redblossomtea());
   accumTeas = accumTeas.concat(await ecoCha());
+  console.log('Total teas scraped: ', accumTeas.length);
 
   return accumTeas;
 }
@@ -79,27 +80,30 @@ async function redblossomtea() {
           })
           .filter(tea => tea.name && !tea.name.toLowerCase().includes('collection')); // Filter out products with "collection" in the title
       }, type);
-      for (let tea of teas) {
-        console.log(`Scraped Tea:`, tea);
-      }
+
+      //debug show scraped teas
+      //for (let tea of teas) {
+      //  console.log(`Scraped Tea:`, tea);
+      //}
 
       rbTeas = rbTeas.concat(teas);
 
       // check for next page
       const nextPageLink = await page.$('.pagination li.next a');  // Check for the <a> inside <li class="next">
       if (nextPageLink) {
-        console.log('checking for next page');
+        //console.log('checking for next page');
         const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);  // Get the href of the Next link
         await page.goto(nextPageUrl);
         pageNum++;
-        console.log(`Navigating to page ${pageNum}...`);
+        //console.log(`Navigating to page ${pageNum}...`);
         const currentUrl = await page.url();
-        console.log('Current page URL:', currentUrl);
+        //console.log('Current page URL:', currentUrl);
         await page.waitForTimeout(2000); // Wait for the next page to load
       } else {
-        console.log('No more pages to scrape.');
+        //console.log('No more pages to scrape.');
         break;  // Exit While() loop
       }
+      
     }
     await page.close(); // Close the current page after scraping
     }
@@ -110,6 +114,7 @@ async function redblossomtea() {
   }
   
   await browser.close();
+  console.log('Scraped ', rbTeas.length, ' from Red Blossom Tea Company');
   return rbTeas;
 }
 
@@ -162,23 +167,24 @@ async function ecoCha() {
           .filter(tea => tea.name && !tea.name.toLowerCase().includes('Sampler')); // Filter out products with "collection" in the title
       }, type);
       ecoTeas = ecoTeas.concat(teas);
+      /*
       for (let tea of teas) {
         console.log(`Scraped Tea:`, tea);
       }
-
+      */
       // check for next page
       const nextPageLink = await page.$('.pagination li.next a');  // Check for the <a> inside <li class="next">
       if (nextPageLink) {
-        console.log('checking for next page');
+        //console.log('checking for next page');
         const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);  // Get the href of the Next link
         await page.goto(nextPageUrl);
         pageNum++;
-        console.log(`Navigating to page ${pageNum}...`);
+        //console.log(`Navigating to page ${pageNum}...`);
         const currentUrl = await page.url();
-        console.log('Current page URL:', currentUrl);
+        //console.log('Current page URL:', currentUrl);
         await page.waitForTimeout(2000); // Wait for the next page to load
       } else {
-        console.log('No more pages to scrape.');
+        //console.log('No more pages to scrape.');
         break;  // Exit While() loop
       }
     }
@@ -189,11 +195,14 @@ async function ecoCha() {
     index === self.findIndex(t => t.name === tea.name && t.link === tea.link)
   );
   await browser.close();
+  console.log('Scraped ', ecoTeas.length, ' from Eco-Cha');
   return ecoTeas;
 }
 
 module.exports = { scrapeInit };
 
+
+/*old scraping that scraped from list and individual pages */
       /*
       for (let tea of teas) {
         if (tea.link) {

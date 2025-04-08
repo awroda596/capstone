@@ -1,10 +1,8 @@
 const Tea = require('../models/tea.model');
 
 async function pushTeas(teas) {
-  console.log("Upserting teas to MongoDB...");
   try {
     for (let tea of teas) {
-    console.log(`Upserting tea: ${JSON.stringify(tea)}`);
     await Tea.findOneAndUpdate(
       { name: tea.name, vendor: tea.vendor }, // Match by name and vendor
         { 
@@ -20,6 +18,7 @@ async function pushTeas(teas) {
     console.error("Error in pushTeas:", error);
     throw error; 
   }
+  console.log('upserted ',teas.length, ' teas to MongoDB');
 }
 
 async function getTeas() {

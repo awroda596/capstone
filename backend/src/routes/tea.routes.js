@@ -1,7 +1,7 @@
 // src/routes/teas.js
 
 const express = require('express');
-const Tea = require('../models/Tea'); 
+const Tea = require('../models/tea.model'); 
 const router = express.Router();
 
 
