@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/api/teas', async (req, res) => {
   try {
-    const teas = await Tea.find({});
+    const teas = await Tea.find();
     if (teas.length === 0) {
       return res.status(404).json({ message: 'No teas found' });
     }
