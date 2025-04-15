@@ -9,8 +9,10 @@ const register = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ username, email, password: hashedPassword });
     await user.save();
+    console.log('User registered:', user);
     res.json({ message: 'Registration successful' });
   } catch (error) {
+    console.error('Error registering user:', error);
     next(error);
   }
 };
@@ -22,11 +24,14 @@ const login = async (req, res, next) => {
   try {
     const user = await User.findOne({ username });
     if (!user) {
+      console.error('User not found for', username);
       return res.status(404).json({ message: 'User not found' });
     }
 
     const passwordMatch = await user.comparePassword(password);
     if (!passwordMatch) {
+
+      console.error('Incorrect password');
       return res.status(401).json({ message: 'Incorrect password' });
     }
 
