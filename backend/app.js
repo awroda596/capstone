@@ -26,10 +26,10 @@ async function startServer() {
     await connectDB();
     console.log('MongoDB connected successfully!');
 
-    // Middleware for parsing JSON bodies
-    app.use(express.json());
-
-    // API endpoint to get all teas
+    
+    app.use(express.json()); // Middleware for parsing JSON bodies 
+    app.use('/auth', authRoutes);
+    app.use('/user', userRoutes);
     app.get('/api/teas', async (req, res) => {
       try {
         const teas = await Tea.find({});
@@ -55,6 +55,7 @@ async function startServer() {
     console.error('Error:', error);
   }
 }
+
 
 app.listen(3000, () => {
   console.log('Server is running on http://localhost:3000');
