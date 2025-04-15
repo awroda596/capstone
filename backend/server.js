@@ -2,12 +2,13 @@ const express = require('express');
 const connectDB  = require('./src/config/db');  // Import the connectDB function
 const {pushTeas} = require('./src/services/tea.service');  // Import the pushTeas function
 const { scrapeInit } = require('./src/services/webscraping');  // Import the webScraper function
+const fs = require('fs');
+const https = require('https');
 const app = express();
-const teaRoutes = require('./src/routes/tea.routes');  // Import routes from tea.routes.js
-const authRoutes = require('./src/routes/auth');  // Import routes from auth.js
+const teaRoutes = require('./src/routes/tea');  
+const authRoutes = require('./src/routes/auth');  
+const userRoutes = require('./src/routes/user');
 
-
-const PORT = 3001;
 const cors = require("cors"); // Import the CORS middleware
 require("dotenv").config();
 
@@ -50,9 +51,23 @@ async function startServer() {
   }
 }
 
-app.listen(PORT, () => {
-  console.log('Server is running on http://localhost:3001');
-});
+
+
+// Parse JSON request body
+app.use(express.json());
+
+//Routes
+app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
+app.use('/teas', teaRoutes); // Use the tea routes
+
+https.createServer({
+  cert: fs.readFileSync('./localhost.crt'),
+  key: fs.readFileSync('./localhost.key')
+}, (req, res) => {
+  res.writeHead(200);
+  res.end('Hello from Node!\n');
+}).listen(4430);
 startServer();
 
 // set up scraping

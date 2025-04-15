@@ -8,27 +8,37 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
   },
   password: {
     type: String,
     required: true,
   },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
 });
 
-userSchema.methods.verifyPassword = async function (password) {
+// Hash the password before saving the user model
+userSchema.pre('save', async function (next) {
   const user = this;
-  const isMatch = await bcrypt.compare(password, user.password);
-  return isMatch;
+  if (!user.isModified('password')) return next();
+
+  try {
+    const salt = await bcrypt.genSalt();
+    user.password = await bcrypt.hash(user.password, salt);
+    next();
+  } catch (error) {
+    return next(error);
+  }
+});
+
+//compare a given password with the hashed password in the database
+userSchema.methods.comparePassword = async function (password) {
+  return bcrypt.compare(password, this.password);
 };
+
 
 const User = mongoose.model("User", userSchema);
 
