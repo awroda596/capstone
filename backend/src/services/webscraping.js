@@ -1,8 +1,9 @@
-const { chromium } = require('playwright');
+//handles any webscraping logic. 
+const { chromium, selectors } = require('playwright');
 const { sites } = require('../config/webscraping.js');
-const { pushTeas } = require('./tea.js');
-
-
+const { pushTeas, markLostTeas, getUndescribedTeas, pushTeaDetails } = require('./tea.js');
+const { getTimestamp } = require('../utils/timestamp.js');
+const { checkSelector,  } = require('../utils/scrapeHelper.js'); 
 
 const teaTypes = [
   { key: 'oolong', value: 'oolong' },
@@ -14,71 +15,162 @@ const teaTypes = [
 
 //gather new teas and update prices of existing teas
 const scrapeTeas = async () => {
+  let allTeas = []; // Initialize an array to store all teas
+
   const browser = await chromium.launch({ headless: true });
-  let allTeas = [];
+  let errorCount = 0;
+  let createCount = 0;
+  let updateCount = 0;
   for (siteInfo of sites) {
-    const { site: siteName, urls, scrapeSelector, vendor: sVendor, typeSelector } = siteInfo;
-    const { awaitSelector, productSelector, nameSelector, priceSelector, paginationSelector } = scrapeSelector;
-    let siteTeas = [];
+    let { site: siteName, urls, scrapeSelector, vendor: sVendor, typeSelector } = siteInfo;
+    console.log(`${sVendor} ${siteName}...`);
+    let { awaitSelector, productSelector, nameSelector, priceSelector, paginationSelector } = scrapeSelector;
+    let siteTeas = []; //store teas per site
     for (let url of urls) {
       try {
         let pageNum = 1;
-        const page = await browser.newPage();
-        await page.goto(url);
+        let page = await browser.newPage();
+        let response = await page.goto(url);
+        if (!response || !response.ok()) {
+          throw new Error(`[${getTimestamp()}] Failed to load ${url}: ${response.status()}`);
+        }
         //while looping through pages for url
         while (true) {
-          console.log(`Scraping ${siteName} page ${pageNum}...`);
-          await page.waitForSelector(awaitSelector);
-          console.log(`Waiting for ${awaitSelector}...`);
-          let type = typeSelector(url);
-          const context = { ...siteInfo, type };
-          teas = await page.$$eval(
-            productSelector,
-            (productElements, { nameSelector, priceSelector, vendor, type }) => {
+          try {
+            console.log(`[${getTimestamp()}] Scraping ${url} page ${pageNum}...`);
+            await page.waitForSelector(awaitSelector);
+            let type = typeSelector(url);
+            let teas = await page.$$eval(productSelector, (productElements, { nameSelector, priceSelector, sVendor, type }) => {
               return productElements.map((productElement) => {
                 const nameElement = productElement.querySelector(nameSelector);
                 const priceElement = productElement.querySelector(priceSelector);
                 const name = nameElement ? nameElement.textContent.trim() : null;
                 const link = nameElement ? nameElement.href : 'N/A';
-                const price = priceElement ? priceElement.textContent.trim() : 'Sold Out';
-                return { name, type, vendor, link, price };
-              });
+                let price = priceElement ? priceElement.textContent.trim() : 'Sold Out';
+                const vendor = sVendor;
+                if (price.toLowerCase().startsWith('us$')) {
+                  price = price.slice(2); // remove 'us'
+                }
+                const isScraped = true; // Set isScraped to true for all scraped teas
+                return { name, type, vendor, link, price, isScraped };
+              }).filter(tea => tea.name && !/collection|sample/i.test(tea.name)); // Filter out products with "collection" or "sample" in the title by testing the name with regex
             },
-            { nameSelector, priceSelector, vendor: sVendor, type } // Pass required data
-          );
-          siteTeas = siteTeas.concat(teas);
-          // check for next page
-          const nextPageLink = await page.$(paginationSelector);  // Check for the <a> inside <li class="next">
-          if (nextPageLink) {
-            //console.log('checking for next page');
-            const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);  // Get the href of the Next link
-            await page.goto(nextPageUrl);
-            pageNum++;
-            //console.log(`Navigating to page ${pageNum}...`);
-            const currentUrl = await page.url();
-            //console.log('Current page URL:', currentUrl);
-            await page.waitForTimeout(2000); // Wait for the next page to load
-          } else {
-            //console.log('No more pages to scrape.');
-            break;  // Exit While() loop
+              { nameSelector, priceSelector, sVendor, type } // Pass required data
+            );
+            pushResults = await pushTeas(teas); //push teas to db
+            errorCount += pushResults.errorCount;
+            createCount += pushResults.createCount;
+            updateCount += pushResults.updateCount;
+            siteTeas = siteTeas.concat(teas); // Add scraped teas to the siteTeas array
+            // check for next page
+            const nextPageLink = await page.$(paginationSelector);  //
+            if (nextPageLink) {
+              //console.log('[${getTimestamp()}] checking for next page');
+              const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);
+              await page.goto(nextPageUrl);
+              pageNum++;
+              //console.log(`[${getTimestamp()}] Navigating to page ${pageNum}...`);
+              const currentUrl = await page.url();
+              //console.log('[${getTimestamp()}] Current page URL:', currentUrl);
+              await page.waitForTimeout(2000);
+            } else {
+              //console.log('[${getTimestamp()}] No more pages to scrape.');
+              break;
+            }
+          } catch (error) {
+            console.warn(`[${getTimestamp()}] Error scraping ${url} on page ${pageNum}:`);
+            throw error;
           }
         }
         await page.close(); // Close the current page after scraping
-      } catch (error) {
-        console.error(`Error scraping ${url}:`, error);
+      } catch (error) { //if an url or page can't be scraped, try the next url
+        console.error(`[${getTimestamp()}] Error scraping ${url}:`, error);
+        page.close(); // Close the page if it was opened
+        continue;
       }
     }
-    allTeas = allTeas.concat(siteTeas);
+    allTeas = allTeas.concat(siteTeas); // Add site teas to the allTeas array
   }
-  for (let tea of allTeas) {
-    console.log(`Scraped Tea:`, tea);
-  }
-  pushTeas(allTeas);
-  //gather links then compare to existing teas to see to find dead links/sold out teas
-  const links = allTeas.map(tea => tea.link);
-  
+  console.log(`[${getTimestamp()}] Scraping completed. Scraped ${allTeas.length} teas from ${sites.length} sites.`);
+  console.log(`[${getTimestamp()}] Scraped ${createCount} new teas and updated ${updateCount} existing teas. Failed to upsert ${errorCount} teas.`);
 
+
+  try {
+    await markLostTeas(allTeas); //update lost teas in db
+    let undescribed = await getUndescribedTeas(); //get teas that need descriptions
+    console.log(`[${getTimestamp()}]  Found missing details for ${undescribed.length} teas,.`);
+    await getTeaInfo(undescribed, browser); //scrape descriptions for teas that need them
+  } catch (error) {
+    // if can't get undescribed teas, skip filling them. 
+    console.error(`[${getTimestamp()}] error in getUndescribed Teas:`, error);
+  }
+
+  //gather links then compare to existing teas to see to find dead links/sold out teas
+
+  await browser.close(); // Close the browser after scraping
 }
+
+//scrape for tea descriptions and more
+// just descriptions for now, will expand to include images, origin, etc. 
+const getTeaInfo = async (teas, browser) => {
+  errorCount = 0;
+  createCount = 0;
+  updateCount = 0;
+  for (let tea of teas) {
+    let page = await browser.newPage();
+    try {
+      //scraping stuff
+      let siteInfo = sites.find(site => tea.vendor.toLowerCase().includes(site.vendor.toLowerCase()));
+      if (!siteInfo) {
+        throw new Error(`[${getTimestamp()}] No site info found for ${tea.vendor}`);
+      }
+      let selectors = siteInfo.scrapeSelector; //get the selectors for the site
+      let url = tea.link;
+      console.log(`[${getTimestamp()}] Scraping details for ${tea.name} from ${url}...`);
+      let response = await page.goto(url);
+      if (!response || !response.ok()) {
+        throw new Error(`[${getTimestamp()}] Failed to load ${url}: ${response.status()}`);
+      }
+      let result = await page.waitForSelector(selectors.detailSelector, { timeout: 5000 });
+      if (!result) {
+        throw new Error(`[${getTimestamp()}] Failed to load details for ${tea.name}`);
+      }
+
+      //descscraper uses the appropriate description scraper for the teas vendor
+      const descScraper = descriptionScrapers[tea.vendor]; 
+      if (!descScraper) {
+        throw new Error(`[${getTimestamp()}] No description scraper found for ${tea.name} from ${tea.vendor}!`);
+      }
+
+      const description = await descScraper(page); //scrape the description
+
+      // catch errors scraping a tea info
+    } catch (error) {
+      page.close(); // Close the page if it was opened
+      console.error(error);
+      errorCount++;
+      continue; // Skip this tea if an error occurs
+    }
+    page.close();
+    //now push the tea to the db
+    try {
+      let pushResult = await pushTeaDetails(tea, { description }); //push the description to the db
+      if (pushResult) {
+        updateCount += pushResult.updateCount;
+      }
+    }
+    catch (error) {
+      console.error(`[${getTimestamp()}] Error pushing tea ${tea.name}:`, error);
+      errorCount++;
+      continue; // Skip to the next tea if there's an error
+    }
+
+  }
+  console.log(`[${getTimestamp()}] Info scraping completed. updated ${updateCount} teas and failed to update ${errorCount} teas.`);
+}
+
+
+
 //upsert teas
 module.exports = {
   scrapeTeas
@@ -136,22 +228,22 @@ async function ecoCha() {
       ecoTeas = ecoTeas.concat(teas);
       /*
       for (let tea of teas) {
-        console.log(`Scraped Tea:`, tea);
+        console.log(`[${getTimestamp()}] Scraped Tea:`, tea);
       }
       /
       // check for next page
       const nextPageLink = await page.$('.pagination li.next a');  // Check for the <a> inside <li class="next">
       if (nextPageLink) {
-        //console.log('checking for next page');
+        //console.log('[${getTimestamp()}] checking for next page');
         const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);  // Get the href of the Next link
         await page.goto(nextPageUrl);
         pageNum++;
-        //console.log(`Navigating to page ${pageNum}...`);
+        //console.log(`[${getTimestamp()}] Navigating to page ${pageNum}...`);
         const currentUrl = await page.url();
-        //console.log('Current page URL:', currentUrl);
+        //console.log('[${getTimestamp()}] Current page URL:', currentUrl);
         await page.waitForTimeout(2000); // Wait for the next page to load
       } else {
-        //console.log('No more pages to scrape.');
+        //console.log('[${getTimestamp()}] No more pages to scrape.');
         break;  // Exit While() loop
       }
     }
@@ -162,7 +254,7 @@ async function ecoCha() {
     index === self.findIndex(t => t.name === tea.name && t.link === tea.link)
   );
   await browser.close();
-  console.log('Scraped ', ecoTeas.length, ' from Eco-Cha');
+  console.log('[${getTimestamp()}] Scraped ', ecoTeas.length, ' from Eco-Cha');
   return ecoTeas;
 }
 async function redblossomtea() {
@@ -222,7 +314,7 @@ async function redblossomtea() {
 
       //debug show scraped teas
       //for (let tea of teas) {
-      //  console.log(`Scraped Tea:`, tea);
+      //  console.log(`[${getTimestamp()}] Scraped Tea:`, tea);
       //}
 
       rbTeas = rbTeas.concat(teas);
@@ -230,16 +322,16 @@ async function redblossomtea() {
       // check for next page
       const nextPageLink = await page.$('.pagination li.next a');  // Check for the <a> inside <li class="next">
       if (nextPageLink) {
-        //console.log('checking for next page');
+        //console.log('[${getTimestamp()}] checking for next page');
         const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);  // Get the href of the Next link
         await page.goto(nextPageUrl);
         pageNum++;
-        //console.log(`Navigating to page ${pageNum}...`);
+        //console.log(`[${getTimestamp()}] Navigating to page ${pageNum}...`);
         const currentUrl = await page.url();
-        //console.log('Current page URL:', currentUrl);
+        //console.log('[${getTimestamp()}] Current page URL:', currentUrl);
         await page.waitForTimeout(2000); // Wait for the next page to load
       } else {
-        //console.log('No more pages to scrape.');
+        //console.log('[${getTimestamp()}] No more pages to scrape.');
         break;  // Exit While() loop
       }
       
@@ -247,13 +339,13 @@ async function redblossomtea() {
     await page.close(); // Close the current page after scraping
     }
     catch (error) {
-      console.error(`Error scraping ${url}:`, error);
+      console.error(`[${getTimestamp()}] Error scraping ${url}:`, error);
       failedUrls.push(url);
     }
   }
   
   await browser.close();
-  console.log('Scraped ', rbTeas.length, ' from Red Blossom Tea Company');
+  console.log('[${getTimestamp()}] Scraped ', rbTeas.length, ' from Red Blossom Tea Company');
   return rbTeas;
 }
 
@@ -273,7 +365,7 @@ for (let tea of teas) {
     const productPage = await browser.newPage();
     await productPage.goto(tea.link);
 
-    console.log(`Navi      await page.waitForSelector('.product');
+    console.log(`[${getTimestamp()}] Navi      await page.waitForSelector('.product');
 let type = null;
 switch (true) {
   case url.includes('oolong'):
@@ -335,10 +427,10 @@ const teas = await page.$$eval('.product', (productElements, type) => {
       tea.description = '';
       tea.vendor = 'Red Blossom Tea Company';
       tea.reviews = [];
-      console.log(`Scraped Tea:`, tea);
+      console.log(`[${getTimestamp()}] Scraped Tea:`, tea);
 
     } catch (error) {
-      console.error(`Error scraping product ${tea.link}:`, error);
+      console.error(`[${getTimestamp()}] Error scraping product ${tea.link}:`, error);
     }
 
     await productPage.close(); 

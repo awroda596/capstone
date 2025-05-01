@@ -19,6 +19,7 @@ class DevHttpOverrides extends HttpOverrides {
 }
 
 void main() {
+  HttpOverrides.global = DevHttpOverrides(); // Set the global HttpOverrides
   runApp(MyApp());
 }
 

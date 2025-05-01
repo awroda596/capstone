@@ -5,9 +5,10 @@ const uri = "mongodb://localhost:27017/testdb"; // MongoDB connection string
 async function connectDB() {
   try {
     await mongoose.connect(uri, {});
-    console.log("Connected to MongoDB with Mongoose");
   } catch (error) {
-    console.error("MongoDB connection error:", error);
+    let timestamp = new Date().toISOString();
+    console.error(`[${timestamp}] MongoDB connection error! exiting...`);
+    process.exit(1); // kill app if failure
   }
 }
 

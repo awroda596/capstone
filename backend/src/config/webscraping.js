@@ -1,4 +1,7 @@
-// webscraping constants
+// webscraping constants and configurations
+// gives the correct CSS selectors for each site as well as the type of tea for each site
+
+const { ServerDescription } = require("mongodb");
 
 
 // types
@@ -38,7 +41,14 @@ const redBlossomTeaScrapeSelectors = {
     nameSelector: '.product-card-details h2.title a',
     priceSelector: '.product-card-details .price .money',
     paginationSelector: '.pagination li.next a',
+    detailSelector: 'page-body-content', //product page details 
+    detailDescriptionSelector: '.product-description',
+    detailFlavorNotesSelector: '.product-flavor-notes',
+    detailImagesSelector: '.product-images img',
+    
 };
+
+
 
 const ecoChaScrapeSelectors = {
     awaitSelector: 'main#main-content .collection-page__list',
@@ -46,9 +56,17 @@ const ecoChaScrapeSelectors = {
     nameSelector: '.product-thumbnail__title',
     priceSelector: '.product-thumbnail__price .money',
     paginationSelector: '.pagination li.next a',
+    detailSelector: 'page-body-content', //product page details 
+    detailDescriptionSelector: '.product-description',
+    detailFlavorNotesSelector: '.product-flavor-notes',
+    detailImagesSelector: '.product-images img',
 };
 
 
+const redBlossomTeaDetailSelectors = {
+
+
+};
 //sites  set urls, scraping, and types for each website
 const sites = [
     {

@@ -7,57 +7,40 @@ const { scrapeTeas } = require('./src/services/webscraping');  // Import the web
 const teaRoutes = require('./src/routes/tea');  
 const authRoutes = require('./src/routes/auth');  
 const userRoutes = require('./src/routes/user');
+const { getTimestamp } = require('./src/utils/timestamp'); // Import the getTimestamp function
 
 const cors = require("cors"); // Import the CORS middleware
 require("dotenv").config();
 
 
 async function startServer() {
-  console.log('Starting server...');
-  try {
+    // Connect to MongoDB
+    console.log(`[${getTimestamp()}] connecting to MongoDB...`);
     await connectDB();
-    console.log('MongoDB connected successfully!');
+    console.log(`[${getTimestamp()}] MongoDB connected successfully!`);
 
-    // Middleware for parsing JSON bodies
-    app.use(cors());
-    app.use(express.json());
-    app.use("/api/auth", authRoutes);
-    // API endpoint to get all teas
-    app.get('/api/teas', async (req, res) => {
-      try {
-        const teas = await Tea.find({});
-        res.json(teas); 
-      } catch (error) {
-        console.error("Error getting teas from MongoDB:", error);
-        res.status(500).json({ error: 'Failed to retrieve teas' });
-      }
-    });
-
-    console.log('Scraping teas...'); 
-    await scrapeTeas(); // Initial scrape
+    //Initial scrape
+    console.log(`[${getTimestamp()}] Initial Server start scrape...`);
+    await scrapeTeas(); 
+    console.log(`[${getTimestamp()}] Initial scrape completed!`);
+    //interval scraping
     const SCRAPE_INTERVAL = 24 * 60 * 60 * 1000; // Scrape every 24 hours
     setInterval(async () => {
-      console.log('Scraping teas...'); 
+      console.log(`[${getTimestamp()}] Scraping teas...`);
       await scrapeTeas();  
     }, SCRAPE_INTERVAL);
-  } catch (error) {
-    console.error('Error connecting to MongoDB:', error);
-    console.error('Error:', error);
-  }
 }
 
-
-
-// Parse JSON request body
 app.use(express.json());
+app.use(cors());
 
 //Routes
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
-app.use('/teas', teaRoutes); // Use the tea routes
+app.use('/teas', teaRoutes); 
 
 
-console.log('Server is running on port 443...');
+console.log(`[${getTimestamp()}] Starting server on port 443...`);
 https.createServer({
   cert: fs.readFileSync('./localhost.crt'),
   key: fs.readFileSync('./localhost.key')
@@ -65,6 +48,7 @@ https.createServer({
   res.writeHead(200);
   res.end('Hello from Node!\n');
 }).listen(443);
+console.log(`[${getTimestamp()}] HTTPS server running on port 443`);
 startServer();
 
 // set up scraping
