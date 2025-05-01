@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<bool> AuthLogin(String username, String password) async {
   final response = await http.post(
-    Uri.parse('https://127.0.0.1/auth/login'),
+    Uri.parse('http://localhost:3000/auth/login'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'username': username, 'password': password}),
   );
@@ -23,7 +23,7 @@ Future<bool> AuthLogin(String username, String password) async {
 
 Future<bool> AuthRegister(String username, String email, String password) async {
   final response = await http.post(
-    Uri.parse('https://127.0.0.1/auth/register'),
+    Uri.parse('http://localhost:3000/auth/register'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'username': username, 'email': email, 'password': password}),
   );

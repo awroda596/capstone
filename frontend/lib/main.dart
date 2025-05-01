@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
 
     if (token == null) return false;
     final response = await http.get(
-      Uri.parse('https://127.0.0.1/user/profile'),
+      Uri.parse('http://localhost:3000/user/profile'),
       headers: { 'Authorization': 'Bearer $token' },
     );
 

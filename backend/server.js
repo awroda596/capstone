@@ -9,7 +9,6 @@ const authRoutes = require('./src/routes/auth');
 const userRoutes = require('./src/routes/user');
 const { getTimestamp } = require('./src/utils/timestamp'); // Import the getTimestamp function
 
-const cors = require("cors"); // Import the CORS middleware
 require("dotenv").config();
 
 
@@ -32,8 +31,11 @@ async function startServer() {
 }
 
 app.use(express.json());
-app.use(cors());
-
+const cors = require('cors');
+app.use(cors({
+  origin: '*', // or your Flutter dev port
+  credentials: true
+}));
 //Routes
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
@@ -41,15 +43,9 @@ app.use('/teas', teaRoutes);
 
 
 console.log(`[${getTimestamp()}] Starting server on port 443...`);
-https.createServer({
-  cert: fs.readFileSync('./localhost.crt'),
-  key: fs.readFileSync('./localhost.key')
-}, (req, res) => {
-  res.writeHead(200);
-  res.end('Hello from Node!\n');
-}).listen(443);
-console.log(`[${getTimestamp()}] HTTPS server running on port 443`);
-startServer();
-
-// set up scraping
+const PORT = 3000; 
+app.listen(PORT, () => {
+    console.log(`[${getTimestamp()}] Server started on port ${PORT}`);
+    startServer(); // Start the server and connect to MongoDB
+  } ); 
 
