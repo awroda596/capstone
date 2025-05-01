@@ -1,4 +1,5 @@
-const Tea = require('../models/tea.model');
+//handles pushing and getting teas from the database
+const Tea = require('../models/tea');
 
 async function pushTeas(teas) {
   try {
@@ -26,7 +27,7 @@ async function getTeas() {
     const teas = await Tea.find({});
     return teas;
   } catch (error) {
-    console.error("Error in getTeaas:", error);
+    console.error("Error in getTeas:", error);
     throw error; 
   }
 }

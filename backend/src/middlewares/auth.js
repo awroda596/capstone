@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/user.model.js');
+const User = require('../models/user.js');
 
+// middleware for Auth, check for token and decode if present
 const authenticate = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
 
@@ -14,7 +15,6 @@ const authenticate = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     req.user = user;
     next();
   } catch (error) {
