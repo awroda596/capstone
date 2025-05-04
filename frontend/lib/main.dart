@@ -4,11 +4,14 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 
+import 'config/theme.dart';
+import 'views/auth/login.dart';
+import 'views/home.dart';
 
-import 'pages/login.dart';
-import 'pages/home.dart';
 
-//override the bad certificate since we are using self signed certificate.
+//colors (theming)
+
+//For dev puprposes, for  testing https: 
 class DevHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
@@ -26,6 +29,8 @@ void main() {
 //check if token is valid/exists, then goes to home, otherwise go to login page. 
 
 class MyApp extends StatelessWidget {
+
+  //get token if it's available.  
   Future<bool> checkToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
@@ -42,7 +47,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Your App',
+      title: 'Spill the Tea',
+      theme: appTheme, //defined in theme in config
       home: FutureBuilder<bool>(
         future: checkToken(),
         builder: (context, snapshot) {

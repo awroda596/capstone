@@ -1,26 +1,27 @@
 //script for testing site scraping
 const { chromium } = require('playwright');
+const { getTeaInfo } = require('./src/services/webscraping.js');
+const {redBlossomTeaScrapeSelectors} = require('./src/config/webscraping.js');
+const {sites} = require('./src/config/webscraping.js');
+const {getUndescribedTeas, updateTea} = require('./src/services/tea.js');
+const connectDB  = require('./src/config/db');  
+
 
 (async () => {
+  await connectDB(); // Connect to MongoDB
   const browser = await chromium.launch();
   const page = await browser.newPage();
 
-  // Go to the page you want to scrape
-  await page.goto('https://redblossomtea.com/collections/oolong');
-  // Wait for the products to load
-  await page.waitForSelector('.page-body-content'); 
-  // Scrape the data
-  const teas = await page.$$eval('.page-body-content .product-list.row-of-4 li', (productElements) => {
-    return productElements.map((productElement) => {
-      const nameElement = productElement.querySelector('.product-card-details h2.title a');
-      const priceElement = productElement.querySelector('.product-card-details .price .money');
-      const name = nameElement ? nameElement.textContent.trim() : null;
-      const price = priceElement ? priceElement.textContent.trim() : null;
-      return { name, price };
-    });
-  });
+  let teas = await getUndescribedTeas(); //get all teas that are not described yet
 
-  console.log(teas); // Output the scraped data
+  await getTeaInfo(teas, browser);
+
+
+
+
+
+
+ 
 
   await browser.close();
 })();

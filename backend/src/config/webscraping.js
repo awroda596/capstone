@@ -41,7 +41,7 @@ const redBlossomTeaScrapeSelectors = {
     nameSelector: '.product-card-details h2.title a',
     priceSelector: '.product-card-details .price .money',
     paginationSelector: '.pagination li.next a',
-    detailSelector: 'page-body-content', //product page details 
+    detailSelector: '.page-body-content', //product page details 
     detailDescriptionSelector: '.product-description',
     detailFlavorNotesSelector: '.product-flavor-notes',
     detailImagesSelector: '.product-images img',
@@ -56,7 +56,7 @@ const ecoChaScrapeSelectors = {
     nameSelector: '.product-thumbnail__title',
     priceSelector: '.product-thumbnail__price .money',
     paginationSelector: '.pagination li.next a',
-    detailSelector: 'page-body-content', //product page details 
+    detailSelector: '.tabs-content', //product page details 
     detailDescriptionSelector: '.product-description',
     detailFlavorNotesSelector: '.product-flavor-notes',
     detailImagesSelector: '.product-images img',

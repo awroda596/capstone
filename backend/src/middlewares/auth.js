@@ -1,3 +1,4 @@
+//adapted from Dev Balaji, Medium
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.js');
 const { getTimestamp } = require('../utils/timestamp.js');

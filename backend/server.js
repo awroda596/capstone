@@ -44,6 +44,8 @@ app.use('/teas', teaRoutes);
 
 console.log(`[${getTimestamp()}] Starting server on port 443...`);
 const PORT = 3000; 
+
+
 app.listen(PORT, () => {
     console.log(`[${getTimestamp()}] Server started on port ${PORT}`);
     startServer(); // Start the server and connect to MongoDB

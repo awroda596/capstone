@@ -18,11 +18,7 @@ const teaSchema = new mongoose.Schema({
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],
 
   // if easily available, origin country and region, otherwise just what is put in the website or leave blank
-  origin: { 
-    raw: { type: String, default: null }, 
-    country: { type: String, default: null }, 
-    region: { type: String, default: null } }, 
-
+  origin: { type: String, default: null }, //origin country of the tea, if available
   style: { type: String, default: null }, //sub style of tea, such as faw or ripe for pu-erh teas or pheonix/dan cong for oolong teas
   images: [{ type: String, default: null }], //array of image urls for the tea, linked to the images on the tea's product page
   
@@ -34,14 +30,9 @@ const teaSchema = new mongoose.Schema({
     waterWeight: { type: String, default: null }, //water weight if ratio is not available
     steepTime: { type: String, default: null }, //steeptime, if available
   },
-  harvest: { 
-    year: { type: String, default: null }, //harvest year if available
-    month: { type: String, default: null }, //harvest month if available
-    season: { type: String, default: null }, //harvest season if available
-    date: { type: String, default: null }, //harvest date if available
-  },
-
-  source: { type: String, default: null }, //source of the tea if available. 
+  harvest: { type: String, default: null }, //harvest date if available
+  
+  isScraped: { type: Boolean, default: true }, //if the tea has been scraped from the website
 },{ timestamps: true,   },);
 
 const Tea = mongoose.model('Tea', teaSchema);

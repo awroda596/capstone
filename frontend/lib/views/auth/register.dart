@@ -1,77 +1,10 @@
 import 'package:flutter/material.dart';
-import '../services/auth.dart';
-import 'home.dart';
-import 'package:http/http.dart' as http;
+import 'package:frontend/config/theme.dart';
+import '../../services/auth.dart';
+import '../home.dart';
 
-class LoginPage extends StatefulWidget {
-  @override
-  _LoginPageState createState() => _LoginPageState();
-}
 
-class _LoginPageState extends State<LoginPage> {
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  String? _error;
-
-  void _login() async {
-    final success = await AuthLogin(
-      _usernameController.text,
-      _passwordController.text,
-    );
-
-    if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    } else {
-      setState(() => _error = "Invalid login");
-    }
-  }
-
-  void _showRegistrationDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return RegistrationDialog();
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Login")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            if (_error != null)
-              Text(_error!, style: TextStyle(color: Colors.red)),
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(labelText: "Username"),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(onPressed: _login, child: Text("Login")),
-            TextButton(
-              onPressed: _showRegistrationDialog,
-              child: Text(
-                "Don't have an account? Register",
-                style: TextStyle(color: Colors.blue),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//register dialogue box that pops up
 
 class RegistrationDialog extends StatefulWidget {
   @override
@@ -94,16 +27,21 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
     });
 
     try {
-      bool result = await AuthRegister(username, email, password);
+      final result = await AuthRegister(username, email, password);
 
-      setState(() {
-        isSubmitting = false;
-        if (result) {
+      if (result['success']) {
+        setState(() {
+          isSubmitting = false;
           isRegistered = true;
-        } else {
-          errorMessage = 'Registration failed. Please try again.';
-        }
-      });
+        });
+      } else {
+        final message =
+            result['message'] ?? 'Registration failed. Please try again.';
+        setState(() {
+          isSubmitting = false;
+          errorMessage = message;
+        });
+      }
     } catch (e) {
       setState(() {
         isSubmitting = false;
@@ -114,6 +52,7 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
 
   @override
   Widget build(BuildContext context) {
+
     return AlertDialog(
       title: Text(isRegistered ? "Success" : "Register"),
       content:
@@ -123,7 +62,6 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
                 children: [
                   Icon(
                     Icons.check_circle_outline,
-                    color: Colors.green,
                     size: 48,
                   ),
                   SizedBox(height: 16),

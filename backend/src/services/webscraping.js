@@ -1,9 +1,10 @@
 //handles any webscraping logic. 
 const { chromium, selectors } = require('playwright');
 const { sites } = require('../config/webscraping.js');
-const { pushTeas, markLostTeas, getUndescribedTeas, pushTeaDetails } = require('./tea.js');
+const { pushTeas, markLostTeas, getUndescribedTeas, updateTea } = require('./tea.js');
 const { getTimestamp } = require('../utils/timestamp.js');
-const { checkSelector,  } = require('../utils/scrapeHelper.js'); 
+const { checkSelector, descriptionScrapers } = require('../utils/scrapeHelper.js');
+const Tea = require('../models/tea');
 
 const teaTypes = [
   { key: 'oolong', value: 'oolong' },
@@ -22,8 +23,7 @@ const scrapeTeas = async () => {
   let createCount = 0;
   let updateCount = 0;
   for (siteInfo of sites) {
-    let { site: siteName, urls, scrapeSelector, vendor: sVendor, typeSelector } = siteInfo;
-    console.log(`${sVendor} ${siteName}...`);
+    let { urls, scrapeSelector, vendor: sVendor, typeSelector } = siteInfo;
     let { awaitSelector, productSelector, nameSelector, priceSelector, paginationSelector } = scrapeSelector;
     let siteTeas = []; //store teas per site
     for (let url of urls) {
@@ -53,7 +53,7 @@ const scrapeTeas = async () => {
                 }
                 const isScraped = true; // Set isScraped to true for all scraped teas
                 return { name, type, vendor, link, price, isScraped };
-              }).filter(tea => tea.name && !/collection|sample/i.test(tea.name)); // Filter out products with "collection" or "sample" in the title by testing the name with regex
+              }).filter(tea => tea.name && !/collection|sample|flight|club/i.test(tea.name)); // Filter out products with "collection" or "sample" in the title by testing the name with regex
             },
               { nameSelector, priceSelector, sVendor, type } // Pass required data
             );
@@ -85,7 +85,6 @@ const scrapeTeas = async () => {
         await page.close(); // Close the current page after scraping
       } catch (error) { //if an url or page can't be scraped, try the next url
         console.error(`[${getTimestamp()}] Error scraping ${url}:`, error);
-        page.close(); // Close the page if it was opened
         continue;
       }
     }
@@ -100,14 +99,14 @@ const scrapeTeas = async () => {
     let undescribed = await getUndescribedTeas(); //get teas that need descriptions
     console.log(`[${getTimestamp()}]  Found missing details for ${undescribed.length} teas,.`);
     await getTeaInfo(undescribed, browser); //scrape descriptions for teas that need them
+    console.log(`[${getTimestamp()}] completed scraping descriptions for ${undescribed.length} teas.`);
   } catch (error) {
     // if can't get undescribed teas, skip filling them. 
     console.error(`[${getTimestamp()}] error in getUndescribed Teas:`, error);
   }
+  console.log(`[${getTimestamp()}] Scraping completed. Scraped ${allTeas.length} teas from ${sites.length} sites.`);
 
-  //gather links then compare to existing teas to see to find dead links/sold out teas
 
-  await browser.close(); // Close the browser after scraping
 }
 
 //scrape for tea descriptions and more
@@ -117,8 +116,8 @@ const getTeaInfo = async (teas, browser) => {
   createCount = 0;
   updateCount = 0;
   for (let tea of teas) {
-    let page = await browser.newPage();
     try {
+      let page = await browser.newPage();
       //scraping stuff
       let siteInfo = sites.find(site => tea.vendor.toLowerCase().includes(site.vendor.toLowerCase()));
       if (!siteInfo) {
@@ -131,38 +130,35 @@ const getTeaInfo = async (teas, browser) => {
       if (!response || !response.ok()) {
         throw new Error(`[${getTimestamp()}] Failed to load ${url}: ${response.status()}`);
       }
-      let result = await page.waitForSelector(selectors.detailSelector, { timeout: 5000 });
+      let result = await page.waitForSelector(selectors.detailSelector, { timeout: 10000 });
+
       if (!result) {
         throw new Error(`[${getTimestamp()}] Failed to load details for ${tea.name}`);
       }
 
       //descscraper uses the appropriate description scraper for the teas vendor
-      const descScraper = descriptionScrapers[tea.vendor]; 
+      const descScraper = descriptionScrapers[tea.vendor];
       if (!descScraper) {
         throw new Error(`[${getTimestamp()}] No description scraper found for ${tea.name} from ${tea.vendor}!`);
       }
 
-      const description = await descScraper(page); //scrape the description
+      //now push the tea to the db
+      try {
+        const details = await descScraper(page); //scrape the description
+        result = await updateTea(tea, details); //push the tea to the db
+      }
 
+      catch (error) {
+        console.error(`[${getTimestamp()}] Error pushing tea ${tea.name}:`, error);
+        errorCount++;
+        continue; // Skip to the next tea if there's an error
+      }
+      page.close();
       // catch errors scraping a tea info
     } catch (error) {
-      page.close(); // Close the page if it was opened
       console.error(error);
       errorCount++;
       continue; // Skip this tea if an error occurs
-    }
-    page.close();
-    //now push the tea to the db
-    try {
-      let pushResult = await pushTeaDetails(tea, { description }); //push the description to the db
-      if (pushResult) {
-        updateCount += pushResult.updateCount;
-      }
-    }
-    catch (error) {
-      console.error(`[${getTimestamp()}] Error pushing tea ${tea.name}:`, error);
-      errorCount++;
-      continue; // Skip to the next tea if there's an error
     }
 
   }
@@ -173,7 +169,9 @@ const getTeaInfo = async (teas, browser) => {
 
 //upsert teas
 module.exports = {
-  scrapeTeas
+  scrapeTeas,
+  getTeaInfo,
+
 };
 /*
 

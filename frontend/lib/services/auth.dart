@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 
-
+//login.  On logging in successfully, the JWT token is stored in shared preferences.
 Future<bool> AuthLogin(String username, String password) async {
   final response = await http.post(
     Uri.parse('http://localhost:3000/auth/login'),
@@ -15,13 +15,15 @@ Future<bool> AuthLogin(String username, String password) async {
     final token = jsonDecode(response.body)['token'];
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token);
+  
     return true;
   } else {
     return false;
   }
 }
 
-Future<bool> AuthRegister(String username, String email, String password) async {
+//registration.  On registering successfully, the JWT token is stored in shared preferences.
+Future<Map<String, dynamic>> AuthRegister(String username, String email, String password) async {
   final response = await http.post(
     Uri.parse('http://localhost:3000/auth/register'),
     headers: {'Content-Type': 'application/json'},
@@ -29,8 +31,12 @@ Future<bool> AuthRegister(String username, String email, String password) async 
   );
 
   if (response.statusCode == 200) {
-    return true;
+    return { 'success': true, 'message': 'Registered successfully' };
   } else {
-    return false;
+    final body = jsonDecode(response.body);
+    return {
+      'success': false,
+      'message': body['message'] ?? 'Unknown registration error'
+    };
   }
 }

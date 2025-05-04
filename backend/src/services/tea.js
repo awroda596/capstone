@@ -3,6 +3,7 @@ const Tea = require('../models/tea');
 const { chromium } = require('playwright');
 const { sites } = require('../config/webscraping.js');
 const { getTimestamp } = require('../utils/timestamp.js');
+const { SecurityDetails } = require('puppeteer');
 
 async function pushTeas(teas) {
   try {
@@ -137,26 +138,37 @@ async function getUndescribedTeas() {
     console.error(`[${getTimestamp()}] error finding undescribed teas:`, error.message);
     throw error;
   }
-
   return uTeas;
 }
 
-// function to upsert tea details to the database: right now just description but details will hold all the things
-async function pushTeaDetails(tea, details)
-{
-  let result = await Tea.findOneAndUpdate(
-    { name: tea.name, vendor: tea.vendor }, //update by name and vendor
-    {
-      $set: { //update the tea document
-        name: tea.name,
-        link: tea.link,
-        description: details.description || 'N/A',
-      }
-    },
-  );
+// set details for a tea.  details is an object with attributes gathered from getTeaInfo
 
+async function updateTea(tea, details) {
+  if(!details) {
+    console.error(`[${getTimestamp()}] No details provided for tea ${tea._id}`);
+    return null;
+  }
+  try {
+    const updatedTea = await Tea.findByIdAndUpdate(
+      tea._id, // Use the tea's _id for the update
+      { $set: details },
+      { new: true } // return the updated doc
+    );
+
+    if (!updatedTea) {
+      console.warn(`Tea with ID ${tea._id} not found`);
+      return null;
+    }
+
+    console.log(`[${getTimestamp()}] Updated tea ${tea._id} with details:`, details);
+
+    return updatedTea;
+  } catch (error) {
+    console.error(`[${getTimestamp()}] Error updating tea ${tea._id}:`, error.message);
+    console.error(`Error updating tea ${tea._id}:`, error);
+    throw error;
+  }
 }
-
 
 const markLostTeas = async (teas) => {
   const scrapedTeas = teas.map(tea => ({
@@ -195,4 +207,4 @@ const markLostTeas = async (teas) => {
 
 
 
-module.exports = { pushTeas, pushTea, getTeas, pushTeaDetails,  getUndescribedTeas, markLostTeas };
+module.exports = { pushTeas, pushTea, getTeas, updateTea,  getUndescribedTeas, markLostTeas };
