@@ -1,8 +1,10 @@
-//Main page.  contents are based on selected page from the drawer.
+//Main page.  contents are based on selected page from the drawer,
 import 'package:flutter/material.dart';
 import 'user/dashboard.dart'; // ✅ Import the ProfilePage
 import '../config/theme.dart';
-import './tea/search.dart'; 
+import './tea/search.dart';
+import './auth/login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -15,20 +17,34 @@ class _HomePageState extends State<HomePage> {
   Widget _buildPage() {
     switch (selectedPage) {
       case 'Dashboard': //user Dash/profile
-        return Dashboard(); 
-      case 'Teas':
+        return Dashboard();
+      case 'Search':
         return SearchPage();
+      case 'Timer':
+        return Dashboard();
+
       default:
-        return Center(child: Text('Home Page'));
+        return Center(child: Center( child: Text('Home Page')));
     }
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token'); // or prefs.clear()
+
+    // Avoid race conditions with backend-auth logic on resume
+    await Future.delayed(Duration(milliseconds: 100));
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => LoginPage()),
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Tea Explorer'),
-      ),
+      appBar: AppBar(title: Center( child:Text(selectedPage))),
       drawer: Drawer(
         child: ListView(
           children: [
@@ -42,7 +58,7 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               title: Text('Teas'),
               onTap: () {
-                setState(() => selectedPage = 'Teas');
+                setState(() => selectedPage = 'Search');
                 Navigator.pop(context);
               },
             ),
@@ -51,6 +67,14 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 setState(() => selectedPage = 'Teas');
                 Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('Logout'),
+              onTap: () {
+                Navigator.pop(context); // close drawer first
+                _logout(); // call logout
+                print('Logout tapped'); // debug
               },
             ),
           ],

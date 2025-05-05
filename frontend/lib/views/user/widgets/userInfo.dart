@@ -113,10 +113,6 @@ class _UserInfoState extends State<UserInfo> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Your Dashboard",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
         const SizedBox(height: 12),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

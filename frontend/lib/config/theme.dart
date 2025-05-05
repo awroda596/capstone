@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 
 
 //colors for theming
-final Color BaiCha = Color(0xFFF9EED8);
-final Color Matcha = Color.fromARGB(255, 66, 105, 61);
-final Color HuangCha = Color.fromARGB(255, 230, 230, 193);
+final Color BaiCha = Color.fromARGB(255, 248, 244, 235);
+final Color Matcha = Color.fromARGB(255, 82, 129, 76);
+final Color HuangCha = Color.fromARGB(255, 210, 211, 178);
 final Color LuCha = Color.fromARGB(255, 175, 221, 149);
 final Color HeiCha = Color(0xFF3E3E3E); //
 
@@ -32,7 +32,7 @@ final MaterialColor customPrimary = createMaterialColor(LuCha);
 
 final appTheme = ThemeData(
   scaffoldBackgroundColor: BaiCha,
-  appBarTheme: AppBarTheme(backgroundColor: Matcha, foregroundColor: Matcha),
+  appBarTheme: AppBarTheme(backgroundColor: Matcha, foregroundColor: BaiCha),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(foregroundColor: LuCha),
   ),

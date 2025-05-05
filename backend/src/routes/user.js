@@ -58,21 +58,7 @@ router.get('/sessions', authenticate, async (req, res) => {
   }
 });
 
-//  users tea "shelves" for their cabinet, paginated.  
-router.get('/shelves', authenticate, async (req, res) => {
-  const page = parseInt(req.query.page) || 0;
-  const pageSize = parseInt(req.query.pageSize) || 2;
-  try {
-    const user = await User.findById(req.userId).select('shelves');
-    const slice = user.shelves.slice(page * pageSize, (page + 1) * pageSize);
-    const full = await Shelf.find({ _id: { $in: slice } }).populate('shelfLabel');
-    const formatted = {};
-    full.forEach(shelf => formatted[shelf.shelfLabel] = shelf.teas.map(t => t.name));
-    res.json(formatted);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+
 
 const conn = mongoose.connection;
 let gfs;
@@ -249,8 +235,7 @@ router.post('/shelves', authenticate, async (req, res) => {
 router.get('/shelves', authenticate, async (req, res) => {
   console.log("has to hit this"); 
   try {
-
-    console.log (test); 
+    user = req.user; 
     if (!req.user) {
       console.log("NO USER"); 
       return res.status(404).json({ error: 'User not found' });
