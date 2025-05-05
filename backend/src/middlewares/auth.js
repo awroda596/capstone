@@ -3,12 +3,11 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user.js');
 const { getTimestamp } = require('../utils/timestamp.js');
 // Middleware for authentication, checks for token and decodes if present
-// middleware for Auth, check for token and decode if present
 const authenticate = async (req, res, next) => {
 
   const ip = req.headers['x-forwarded-for'] || req.ip;
   
-  console.log(`[${getTimestamp()}] Incoming connection from: ${ip}`);
+  console.log(`[${getTimestamp()}] Incoming request from: ${ip}`);
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
     console.log(`[${getTimestamp()}] no token provided for ${ip}`);

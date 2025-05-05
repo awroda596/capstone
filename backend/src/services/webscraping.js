@@ -7,11 +7,11 @@ const { checkSelector, descriptionScrapers } = require('../utils/scrapeHelper.js
 const Tea = require('../models/tea');
 
 const teaTypes = [
-  { key: 'oolong', value: 'oolong' },
-  { key: 'white', value: 'white' },
-  { key: 'black', value: 'black' },
-  { key: 'green', value: 'green' },
-  { key: ['puerh', 'pu-erh'], value: 'pu-erh' },
+  { key: 'oolong', value: 'Oolong' },
+  { key: 'white', value: 'White' },
+  { key: 'black', value: 'Black' },
+  { key: 'green', value: 'Green' },
+  { key: ['puerh', 'pu-erh'], value: 'Pu\'erh' },
 ];
 
 //gather new teas and update prices of existing teas
@@ -39,8 +39,8 @@ const scrapeTeas = async () => {
           try {
             console.log(`[${getTimestamp()}] Scraping ${url} page ${pageNum}...`);
             await page.waitForSelector(awaitSelector);
-            let type = typeSelector(url);
-            let teas = await page.$$eval(productSelector, (productElements, { nameSelector, priceSelector, sVendor, type }) => {
+            const type = typeSelector(url);
+            const teas = await page.$$eval(productSelector, (productElements, { nameSelector, priceSelector, sVendor, teaType }) => {
               return productElements.map((productElement) => {
                 const nameElement = productElement.querySelector(nameSelector);
                 const priceElement = productElement.querySelector(priceSelector);
@@ -49,14 +49,14 @@ const scrapeTeas = async () => {
                 let price = priceElement ? priceElement.textContent.trim() : 'Sold Out';
                 const vendor = sVendor;
                 if (price.toLowerCase().startsWith('us$')) {
-                  price = price.slice(2); // remove 'us'
+                  price = price.slice(2);
                 }
-                const isScraped = true; // Set isScraped to true for all scraped teas
-                return { name, type, vendor, link, price, isScraped };
-              }).filter(tea => tea.name && !/collection|sample|flight|club/i.test(tea.name)); // Filter out products with "collection" or "sample" in the title by testing the name with regex
-            },
-              { nameSelector, priceSelector, sVendor, type } // Pass required data
-            );
+                const isScraped = true;
+                return { name, type: teaType, vendor, link, price, isScraped };
+              }).filter(tea => tea.name && !/collection|sample|flight|club/i.test(tea.name));
+            }, { nameSelector, priceSelector, sVendor, teaType: type });
+            
+            
             pushResults = await pushTeas(teas); //push teas to db
             errorCount += pushResults.errorCount;
             createCount += pushResults.createCount;

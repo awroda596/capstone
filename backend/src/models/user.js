@@ -18,7 +18,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-});
+  displayname: {type: String, required: true},  
+  avatar: {
+    type: String,
+  },  //saves the fileid to the avatar, returned via get and post to /api/avatar/filename
+  reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],  //user's tea reviews
+  sessions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }],   //list of recorded tea sessions. 
+  shelves: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Review' }], //lists of teas for the user's cabinet
+}, { timestamps: true });
+
+//adapted from Dev Balaji, Medium
 
 // Hash the password before saving the user model
 userSchema.pre('save', async function (next) {

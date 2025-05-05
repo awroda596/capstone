@@ -1,7 +1,8 @@
 //Main page.  contents are based on selected page from the drawer.
 import 'package:flutter/material.dart';
-import 'profile.dart'; // ✅ Import the ProfilePage
+import 'user/dashboard.dart'; // ✅ Import the ProfilePage
 import '../config/theme.dart';
+import './tea/search.dart'; 
 
 class HomePage extends StatefulWidget {
   @override
@@ -9,14 +10,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String selectedPage = 'Home';
+  String selectedPage = 'Dashboard';
 
   Widget _buildPage() {
     switch (selectedPage) {
-      case 'Profile':
-        return ProfilePage(); 
+      case 'Dashboard': //user Dash/profile
+        return Dashboard(); 
       case 'Teas':
-        return Center(child: Text('Teas Page'));
+        return SearchPage();
       default:
         return Center(child: Text('Home Page'));
     }
@@ -31,14 +32,10 @@ class _HomePageState extends State<HomePage> {
       drawer: Drawer(
         child: ListView(
           children: [
-            DrawerHeader(
-              child: Text('Welcome!'),
-              decoration: BoxDecoration(color: Matcha),
-            ),
             ListTile(
-              title: Text('Profile'),
+              title: Text('Dashboard'),
               onTap: () {
-                setState(() => selectedPage = 'Profile');
+                setState(() => selectedPage = 'Dashboard');
                 Navigator.pop(context);
               },
             ),

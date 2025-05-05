@@ -1,6 +1,5 @@
 
 const mongoose = require('mongoose');
-const { BrowserEvent } = require('puppeteer');
 
 const teaSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -9,7 +8,7 @@ const teaSchema = new mongoose.Schema({
   price: { type: String, default: 'N/A' },
   description: { type: String, default: null},
   flavorNotes: { type: String, default: null}, //flavor notes from vendor, if available
-  tastingNotes: { type: String, default: null}, //tasting notes from vendor, if available
+  tastingNotes: { type: String, default: null}, //tasting notes from user.  
   
   userFlavorNotes: { type: String, default: null}, //may remove, user submitted flavor notes
   rating: { type: Number, default: null }, //out of 10

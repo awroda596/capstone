@@ -34,10 +34,12 @@ class MyApp extends StatelessWidget {
   Future<bool> checkToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
+    print("have token"); 
+  
 
     if (token == null) return false;
     final response = await http.get(
-      Uri.parse('http://localhost:3000/user/profile'),
+      Uri.parse('http://localhost:3000/auth/auth'),
       headers: { 'Authorization': 'Bearer $token' },
     );
 

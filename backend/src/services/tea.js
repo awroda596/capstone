@@ -46,6 +46,7 @@ async function pushTeas(teas) {
             name: tea.name,
             link: tea.link,
             vendor: tea.vendor,
+            type: tea.type,
             price: tea.price,
             isScraped: true,
           }
@@ -114,16 +115,33 @@ async function pushTea(tea) {
 }
 
 
+//get teas based on query, type, and vendor; 
+async function getTeas({ query, type, vendor, offset = 0, limit = 20 }) {
+  const skip = parseInt(offset, 10);
+  const lim = parseInt(limit, 10);
 
+  const filter = {};
 
-async function getTeas() {
-  try {
-    const teas = await Tea.find({});
-    return teas;
-  } catch (error) {
-    console.error(`[${getTimestamp()}] Error in getTeas:`, error);
-    throw error;
+  if (query) {
+    const regex = new RegExp(query, 'i');
+    const stringFields = Object.entries(Tea.schema.paths)
+      .filter(([key, path]) =>
+        path.instance === 'String' && !key.startsWith('_')
+      )
+      .map(([key]) => ({ [key]: regex }));
+    filter.$or = stringFields;
   }
+
+  if (type) filter.type = type;
+  if (vendor) filter.vendor = vendor;
+
+  const results = await Tea.find(filter).skip(skip).limit(lim + 1);
+  const hasMore = results.length > lim;
+
+  return {
+    results: hasMore ? results.slice(0, lim) : results,
+    hasMore
+  };
 }
 
 //find teas that have not been scraped for descriptions yet. 

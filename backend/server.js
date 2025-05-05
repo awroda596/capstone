@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const https = require('https');
 const app = express();
-const connectDB  = require('./src/config/db');  // Import the connectDB function
+const {connectDB}  = require('./src/config/db');  // Import the connectDB function
 const { scrapeTeas } = require('./src/services/webscraping');  // Import the webScraper function
 const teaRoutes = require('./src/routes/tea');  
 const authRoutes = require('./src/routes/auth');  
@@ -38,8 +38,8 @@ app.use(cors({
 }));
 //Routes
 app.use('/auth', authRoutes);
-app.use('/user', userRoutes);
-app.use('/teas', teaRoutes); 
+app.use('/api/user', userRoutes);
+app.use('/api', teaRoutes); 
 
 
 console.log(`[${getTimestamp()}] Starting server on port 443...`);

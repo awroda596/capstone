@@ -116,7 +116,7 @@ async function scrapeDescriptionEcoCha(page) {
 }
 
 
-//check if a selector exists for a given site. 
+//check if a selector exists for a given site, not used currently.  
 async function checkSelector(page, selector) {
   if (!selector) return null;
   const exists = await page.$(selector);

@@ -6,10 +6,10 @@ const { getTimestamp } = require('../utils/timestamp.js');
 // Register a new user
 const register = async (req, res, next) => {
   const { username, email, password } = req.body;
-
+  const displayname = username
   try {
-    const user = new User({ username, email, password }); // 🔥 No hashing here
-    await user.save(); // ✅ Triggers the schema's pre-save to hash
+    const user = new User({ username, email, password, displayname }); 
+    await user.save(); 
     console.log(`[${getTimestamp()}] User registered: ${user.username}, ${user.email}`);
     res.status(200).json({ message: 'Registration successful' });
   } catch (error) {

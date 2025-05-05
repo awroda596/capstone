@@ -8,27 +8,27 @@ const { ServerDescription } = require("mongodb");
 
 
 const generalTypeSelector = (url) => {
-    if (url.includes('oolong')) return 'oolong';
+    if (url.includes('oolong')) return 'Oolong';
     if (url.includes('white')) return 'white';
-    if (url.includes('black')) return 'black';
-    if (url.includes('green')) return 'green';
-    if (url.includes('pu-erh')) return 'pu-erh';
+    if (url.includes('black')) return 'Black';
+    if (url.includes('green')) return 'Green';
+    if (url.includes('pu-erh')) return 'Pu\'erh';
     return 'other';
 };
 
 const redBlossomTypeSelector = (url) => {
-    if (url.includes('oolong')) return 'oolong';
-    if (url.includes('white')) return 'white';
-    if (url.includes('black')) return 'black';
-    if (url.includes('green')) return 'green';
-    if (url.includes('pu-erh')) return 'pu-erh';
+    if (url.includes('oolong')) return 'Oolong';
+    if (url.includes('white')) return 'White';
+    if (url.includes('black')) return 'Black';
+    if (url.includes('green')) return 'Green';
+    if (url.includes('pu-erh')) return 'Pu-erh';
     return 'other';
 };
 
 const ecoChaTypeSelector = (url) => {
-    if (url.includes('oolong')) return 'oolong';
-    if (url.includes('green')) return 'green';
-    if (url.includes('black')) return 'black';
+    if (url.includes('oolong')) return 'Oolong';
+    if (url.includes('green')) return 'Green';
+    if (url.includes('black')) return 'Black';
     return 'other';
 };
 

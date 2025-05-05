@@ -32,7 +32,7 @@ final MaterialColor customPrimary = createMaterialColor(LuCha);
 
 final appTheme = ThemeData(
   scaffoldBackgroundColor: BaiCha,
-  appBarTheme: AppBarTheme(backgroundColor: LuCha, foregroundColor: HeiCha),
+  appBarTheme: AppBarTheme(backgroundColor: Matcha, foregroundColor: Matcha),
   textButtonTheme: TextButtonThemeData(
     style: TextButton.styleFrom(foregroundColor: LuCha),
   ),
@@ -42,10 +42,10 @@ final appTheme = ThemeData(
       foregroundColor: HeiCha,
     ),
   ),
-  cardColor: HuangCha,
+  cardColor: LuCha,
   drawerTheme: DrawerThemeData(backgroundColor: LuCha),
   dialogTheme:  DialogTheme(
-  backgroundColor: HuangCha,
+  backgroundColor: LuCha,
   surfaceTintColor: Colors.transparent, 
   ),
   textTheme: TextTheme(
@@ -65,4 +65,12 @@ final appTheme = ThemeData(
     labelMedium: TextStyle(color: HeiCha, fontFamily: 'Georgia'),
     labelSmall: TextStyle(color: HeiCha, fontFamily: 'Georgia'),
   ),
+   cardTheme: CardTheme(
+      elevation: 4,
+      color: LuCha,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      margin: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+    ),
 );
