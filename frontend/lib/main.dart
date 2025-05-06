@@ -29,7 +29,6 @@ void main() {
 //check if token is valid/exists, then goes to home, otherwise go to login page. 
 
 class MyApp extends StatelessWidget {
-
   //get token if it's available.  
   Future<bool> checkToken() async {
     final prefs = await SharedPreferences.getInstance();

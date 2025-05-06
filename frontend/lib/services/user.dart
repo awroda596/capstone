@@ -69,7 +69,9 @@ Future<void> updateAvatar(XFile image) async {
 }
 
 
-Future<void> updateReview(String id, Map<String, dynamic> updatedFields) async {
+
+// Update review, if success return the new review to display
+Future<Map<String, dynamic>> updateReview(String id, Map<String, dynamic> updatedFields) async {
   final token = await getJwtToken();
   if (token == null) throw Exception('No token');
 
@@ -84,5 +86,16 @@ Future<void> updateReview(String id, Map<String, dynamic> updatedFields) async {
 
   if (res.statusCode != 200) {
     throw Exception('Failed to update review');
+  }
+
+  if (res.body.isEmpty) {
+    throw Exception('Empty response from server');
+  }
+
+  final decoded = jsonDecode(res.body);
+  if (decoded is Map<String, dynamic>) {
+    return decoded;
+  } else {
+    throw Exception('Unexpected response format');
   }
 }
