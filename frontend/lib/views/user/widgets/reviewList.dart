@@ -37,14 +37,19 @@ class _ReviewListState extends State<ReviewList> {
     }
   }
 
-  void _showReviewDialog(Map<String, dynamic> review) {
+  void showReview(Map<String, dynamic> review) {
     showDialog(
       context: context,
-      builder: (_) => ViewReviewDialog(review: review, onRefresh: fetchReviews),
+      builder:
+          (_) => ViewReviewDialog(
+            review: review,
+            onRefresh: fetchReviews,
+            onReviewUpdated: updateReview,
+          ),
     );
   }
 
-  void updateReviewInList(Map<String, dynamic> updatedReview) {
+  void updateReview(Map<String, dynamic> updatedReview) {
     setState(() {
       final index = reviews.indexWhere((r) => r['_id'] == updatedReview['_id']);
       if (index != -1) {
@@ -90,7 +95,7 @@ class _ReviewListState extends State<ReviewList> {
                                   ),
                                 )
                                 : null,
-                        onTap: () => _showReviewDialog(review),
+                        onTap: () => showReview(review),
                       ),
                     );
                   },
@@ -106,11 +111,13 @@ class _ReviewListState extends State<ReviewList> {
 class ViewReviewDialog extends StatefulWidget {
   final Map<String, dynamic> review;
   final VoidCallback onRefresh;
+  final Function(Map<String, dynamic>)? onReviewUpdated; 
 
   const ViewReviewDialog({
     super.key,
     required this.review,
     required this.onRefresh,
+    this.onReviewUpdated,
   });
 
   @override
