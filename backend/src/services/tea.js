@@ -162,7 +162,7 @@ async function getUndescribedTeas() {
 }
 
 // set details for a tea.  details is an object with attributes gathered from getTeaInfo
-
+//update tea with details where details is a custom object with set parameters. this makes it modular for different websites with different available parametesr. 
 async function updateTea(tea, details) {
   if (!details) {
     console.error(`[${getTimestamp()}] No details provided for tea ${tea._id}`);
@@ -172,8 +172,10 @@ async function updateTea(tea, details) {
     const updatedTea = await Tea.findByIdAndUpdate(
       tea._id, // Use the tea's _id for the update
       { $set: details },
-      { new: true } // return the updated doc
+      { new: true } 
     );
+
+
 
     if (!updatedTea) {
       console.warn(`Tea with ID ${tea._id} not found`);

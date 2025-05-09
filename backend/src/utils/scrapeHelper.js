@@ -46,7 +46,8 @@ async function scrapeDescriptionRedBlossom(page) {
           const value = spans[1].textContent?.trim();
           if (!label || !value) return;
           if (label.includes('origin')) {
-            details.origin = value;
+            details.origin_raw = value;
+            deatils.orign = value; 
           } else if (label.includes('craft')) {
             details.style = value;
           } else if (label.includes('flavor')) {
@@ -93,7 +94,8 @@ async function scrapeDescriptionEcoCha(page) {
           details.flavorNotes = text;
         }
 
-        if (label === 'harvest') {
+        if (label === 'harvest') { //eco-cha handles harvest weird
+          details.origin_raw = text;
           details.origin = text;
         }
       });

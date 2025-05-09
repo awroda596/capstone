@@ -4,12 +4,9 @@
 
 const express = require('express');
 const { authenticate } = require('../middlewares/auth');
-const multer = require('multer');
 const router = express.Router();
 const crypto = require('crypto');
 const path = require('path');
-const Grid = require('gridfs-stream');
-const { GridFsStorage } = require('multer-gridfs-storage');
 const uri = require('../config/db.js');
 const mongoose = require('mongoose');
 const User = require('../models/user');
@@ -65,29 +62,6 @@ router.get('/sessions', authenticate, async (req, res) => {
 
 
 
-const conn = mongoose.connection;
-let gfs;
-conn.once('open', () => {
-  gfs = Grid(conn.db, mongoose.mongo);
-  gfs.collection('avatars');
-});
-
-const storage = new GridFsStorage({
-  url: uri,
-  file: (req, file) => {
-    return new Promise((resolve, reject) => {
-      crypto.randomBytes(16, (err, buf) => {
-        if (err) return reject(err);
-        const filename = buf.toString('hex') + path.extname(file.originalname);
-        resolve({ filename, bucketName: 'avatars' });
-      });
-    });
-  }
-});
-
-const upload = multer({ storage });
-
-
 // POST /displayName - Authenticated update of displayName
 router.post('/displayname', authenticate, async (req, res) => {
   const { displayname } = req.body;
@@ -124,20 +98,7 @@ router.post('/avatar/upload', authenticate, async (req, res) => {
   }
 });
 
-// GET /avatar/:filename - Stream from GridFS
-router.get('/avatar/:filename', async (req, res) => {
-  try {
-    const db = mongoose.connection.db;
-    const bucket = new GridFSBucket(db, { bucketName: 'avatars' });
-    const stream = bucket.openDownloadStreamByName(req.params.filename);
 
-    stream.on('error', () => res.status(404).json({ error: 'File not found' }));
-    stream.pipe(res);
-  } catch (err) {
-    console.error('Error streaming avatar:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
 router.put('/reviews/:id', authenticate, async (req, res) => {
   const { reviewText, rating } = req.body;

@@ -214,6 +214,7 @@ class Reviews extends StatelessWidget {
   Widget build(BuildContext context) {
     final username = review['username'] ?? 'Anonymous';
     final content = review['reviewText'] ?? '';
+    final notes = review['']?? '';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -224,8 +225,9 @@ class Reviews extends StatelessWidget {
           children: [
             Text(username, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text(content, maxLines: 3, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 8),
+            Text(content, maxLines: 8, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+             Text("Tasting Notes: ${notes}"),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
