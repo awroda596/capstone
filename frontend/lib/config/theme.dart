@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-//handle all the theming here: 
-
+import 'package:flutter/cupertino.dart';
+//handle all the theming here:
 
 //colors for theming
 final Color BaiCha = Color.fromARGB(255, 248, 244, 235);
@@ -44,9 +44,9 @@ final appTheme = ThemeData(
   ),
   cardColor: LuCha,
   drawerTheme: DrawerThemeData(backgroundColor: LuCha),
-  dialogTheme:  DialogTheme(
-  backgroundColor: LuCha,
-  surfaceTintColor: Colors.transparent, 
+  dialogTheme: DialogTheme(
+    backgroundColor: LuCha,
+    surfaceTintColor: Colors.transparent,
   ),
   textTheme: TextTheme(
     displayLarge: TextStyle(color: HeiCha, fontFamily: 'Georgia'),
@@ -65,12 +65,14 @@ final appTheme = ThemeData(
     labelMedium: TextStyle(color: HeiCha, fontFamily: 'Georgia'),
     labelSmall: TextStyle(color: HeiCha, fontFamily: 'Georgia'),
   ),
-   cardTheme: CardTheme(
-      elevation: 4,
-      color: LuCha,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      margin: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-    ),
+  cardTheme: CardTheme(
+    elevation: 4,
+    color: LuCha,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    margin: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+  ),
+  cupertinoOverrideTheme: CupertinoThemeData(
+    primaryColor: Matcha, // Active segment color
+    textTheme: CupertinoTextThemeData(textStyle: TextStyle(fontSize: 16)),
+  ),
 );

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../services/user.dart';
-import './widgets/userInfo.dart'; 
-import './widgets/reviewList.dart';
-import './widgets/sessionList.dart';
-import './widgets/teaCabinet.dart';
+import 'userInfo.dart'; 
+import 'reviewList.dart';
+import 'sessionList.dart';
+import 'teaCabinet.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});

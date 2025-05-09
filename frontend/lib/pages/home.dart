@@ -2,9 +2,10 @@
 import 'package:flutter/material.dart';
 import 'user/dashboard.dart'; // ✅ Import the ProfilePage
 import '../config/theme.dart';
-import './tea/search.dart';
-import './auth/login.dart';
+import 'tea/search.dart';
+import 'auth/login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/pages/timer/timerpage.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -21,7 +22,7 @@ class _HomePageState extends State<HomePage> {
       case 'Search':
         return SearchPage();
       case 'Timer':
-        return Dashboard();
+        return TimerPage();
 
       default:
         return Center(child: Center( child: Text('Home Page')));
@@ -65,7 +66,7 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               title: Text('Timer'),
               onTap: () {
-                setState(() => selectedPage = 'Teas');
+                setState(() => selectedPage = 'Timer');
                 Navigator.pop(context);
               },
             ),

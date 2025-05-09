@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../services/user.dart';
+import '../../services/user.dart';
 
 
 class UserInfo extends StatefulWidget {

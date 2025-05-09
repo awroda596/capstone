@@ -1,3 +1,7 @@
+//handler for user and user collections routes.  
+//Right now also handles all the actual logic and stuff
+// will separte it out as time permits.  
+
 const express = require('express');
 const { authenticate } = require('../middlewares/auth');
 const multer = require('multer');
@@ -12,6 +16,7 @@ const User = require('../models/user');
 const Review = require('../models/review');
 const Session = require('../models/session');
 const Shelf = require('../models/shelf');
+const { getTimestamp } = require('../utils/timestamp');
 //check token
 
 router.get('/', authenticate, async (req, res) => {
@@ -202,6 +207,7 @@ router.post('/sessions', authenticate, async (req, res) => {
   }
 });
 
+//add a new shelf
 router.post('/shelves', authenticate, async (req, res) => {
   const { shelfLabel } = req.body;
 
@@ -231,6 +237,30 @@ router.post('/shelves', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+//new shelves route passing params by endpoint 
+router.post ('/shelves/:shelfId/teas', authenticate, async (req,res) => {
+  const {shelfId} = req.params; 
+  const {teaId} = req.body; 
+  console.log(`[${getTimestamp()}] Shelf Tea Addition Request`); 
+  try {
+    const shelf = await Shelf.findById(shelfId);
+    if (!shelf) return res.status(404).json({ message: 'Shelf not found' });
+
+    if (shelf.teas.includes(teaId)) {
+      return res.status(200).json({ message: 'Tea already in shelf' });
+    }
+
+    shelf.teas.push(teaId);
+    await shelf.save();
+    res.status(200).json({ message: 'Tea added successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 router.get('/shelves', authenticate, async (req, res) => {
   console.log("has to hit this"); 

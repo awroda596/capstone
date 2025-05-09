@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import './details.dart'; 
+import 'details.dart'; 
 import '../../services/teas.dart'; 
+import 'package:frontend/config/api.dart'; 
+
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
@@ -25,46 +27,33 @@ class _SearchPageState extends State<SearchPage> {
   List<dynamic> results = [];
   String? error;
 
-  Future<void> searchTeas({int page = 0}) async {
-    final query = searchController.text.trim();
+  //search for teas, update interface.  used for pagination as well
+  Future<void> searchAndUpdate({int page = 0}) async {
+  final searchText = searchController.text.trim();
+
+  setState(() {
+    error = null;
+    isLoading = true;
+  });
+
+  try {
+    final result = await searchTeas(
+      searchInput: searchText,
+      page: page,
+      pageSize: pageSize,
+    );
 
     setState(() {
-      error = null;
-      isLoading = true;
+      results = List.from(result['results'] ?? []);
+      hasMore = result['hasMore'] ?? false;
+      currentPage = page;
     });
-
-    try {
-      final uri = Uri.parse('http://localhost:3000/api/search').replace(
-        queryParameters: {
-          if (query.isNotEmpty) 'query': query,
-          if (selectedType != null && selectedType!.isNotEmpty) 'type': selectedType!,
-          if (selectedVendor != null && selectedVendor!.isNotEmpty) 'vendor': selectedVendor!,
-          'offset': (page * pageSize).toString(),
-          'limit': pageSize.toString(),
-        },
-      );
-
-      final res = await http.get(uri);
-
-      if (res.statusCode == 200) {
-        final decoded = json.decode(res.body);
-        final List data = decoded['results'];
-        final bool more = decoded['hasMore'];
-
-        setState(() {
-          results = data;
-          hasMore = more;
-          currentPage = page;
-        });
-      } else {
-        setState(() => error = 'Server error: ${res.statusCode}');
-      }
-    } catch (e) {
-      setState(() => error = 'Failed to connect');
-    } finally {
-      setState(() => isLoading = false);
-    }
+  } catch (e) {
+    setState(() => error = e.toString());
+  } finally {
+    setState(() => isLoading = false);
   }
+}
 
   Widget searchBar() {
     return Column(
@@ -84,12 +73,13 @@ class _SearchPageState extends State<SearchPage> {
               ),
               const SizedBox(width: 10),
               ElevatedButton(
-                onPressed: () => searchTeas(page: 0),
+                onPressed: () => searchAndUpdate(page: 0),
                 child: const Text('Search'),
               ),
             ],
           ),
         ),
+        /*  To be replaced by dialogue box!  
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: Row(
@@ -119,7 +109,7 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ],
           ),
-        ),
+        ), */
       ],
     );
   }
@@ -162,7 +152,7 @@ class _SearchPageState extends State<SearchPage> {
                             const SizedBox(height: 4),
                             Text(item['vendor'] ?? 'no vendor, please report this bug!!'),
                             if (item['type'] != null) Text('Type: ${item['type']}'),
-                            if (item['rating'] != null) Text('rating: ${item['rating']}'), 
+                            if (item['rating'] != null) Text('rating: ${(item['rating'] as num).toStringAsFixed(2)}'), 
                             Text('Price: ${item['price']}')                      
                           ],
                         ),
@@ -191,14 +181,14 @@ class _SearchPageState extends State<SearchPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: currentPage > 0 && !isLoading ? () => searchTeas(page: currentPage - 1) : null,
+                onPressed: currentPage > 0 && !isLoading ? () => searchAndUpdate(page: currentPage - 1) : null,
                 child: const Text('Previous'),
               ),
               const SizedBox(width: 16),
               Text('Page ${currentPage + 1}'),
               const SizedBox(width: 16),
               ElevatedButton(
-                onPressed: hasMore && !isLoading ? () => searchTeas(page: currentPage + 1) : null,
+                onPressed: hasMore && !isLoading ? () => searchAndUpdate(page: currentPage + 1) : null,
                 child: const Text('Next'),
               ),
             ],

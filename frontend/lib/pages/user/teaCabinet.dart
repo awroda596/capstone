@@ -1,6 +1,7 @@
+//this stores user created lists or "shelves" of teas 
 import 'package:flutter/material.dart';
-
-import '../../../services/user.dart';
+import 'package:frontend/config/api.dart';
+import '../../services/user.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -18,27 +19,18 @@ class _TeaCabinetListState extends State<TeaCabinetList> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => fetchShelves());
+    loadCabinet();
   }
 
-  Future<void> fetchShelves() async {
-    final token = await getJwtToken();
-    final response = await http.get(
-      Uri.parse('http://localhost:3000/api/user/shelves'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200) {
+  Future<void> loadCabinet() async {
+    final fetchedShelves = await fetchCabinet();
+    if (fetchedShelves != null) {
       setState(() {
-        shelves = json.decode(response.body);
+        shelves = fetchedShelves;
         isLoading = false;
-        isEmpty = false;
+        isEmpty = fetchedShelves.isEmpty;
       });
     } else {
-      print("why are we here/?? just to suffer??");
       setState(() {
         isLoading = false;
         isEmpty = true;
@@ -46,6 +38,7 @@ class _TeaCabinetListState extends State<TeaCabinetList> {
     }
   }
 
+  //need to separate as own widget.  
   void _showCreateShelfDialog() {
     final controller = TextEditingController();
 
@@ -71,7 +64,7 @@ class _TeaCabinetListState extends State<TeaCabinetList> {
                   if (label.isEmpty) return;
 
                   final res = await http.post(
-                    Uri.parse('http://localhost:3000/api/user/shelves'),
+                    Uri.parse('$baseURI/api/user/shelves'),
                     headers: {
                       'Authorization': 'Bearer $token',
                       'Content-Type': 'application/json',
@@ -80,8 +73,9 @@ class _TeaCabinetListState extends State<TeaCabinetList> {
                   );
 
                   Navigator.pop(context);
-                  if (res.statusCode == 200 || res.statusCode == 201)
-                    fetchShelves();
+                  if (res.statusCode == 200 || res.statusCode == 201) {
+                    loadCabinet(); //reload from backend.
+                  }
                 },
                 child: const Text('Create'),
               ),
@@ -90,6 +84,7 @@ class _TeaCabinetListState extends State<TeaCabinetList> {
     );
   }
 
+  //also need to separate as a w
   void _showShelfContentsDialog(Map shelf) {
     final teas = List<String>.from(shelf['teas'] ?? []);
     showDialog(
@@ -147,16 +142,25 @@ class _TeaCabinetListState extends State<TeaCabinetList> {
             else if (isEmpty)
               const Text("You haven't added any shelves yet.")
             else
-              ...shelves.map((shelf) {
+            Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: shelves.length,
+              itemBuilder: (context, index) {
+                final shelf = shelves[index];
                 final label = shelf['shelfLabel'] ?? 'Unnamed Shelf';
+                final teaCount = (shelf['teas'] as List?)?.length ?? 0;
+
                 return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 4),
                   child: ListTile(
-                    title: Text(label),
+                    title: Text('$label ($teaCount)'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _showShelfContentsDialog(shelf),
                   ),
                 );
-              }).toList(),
+              },
+            ),)
           ],
         ),
       ),

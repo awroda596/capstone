@@ -5,9 +5,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'config/theme.dart';
-import 'views/auth/login.dart';
-import 'views/home.dart';
-
+import 'pages/auth/login.dart';
+import 'pages/home.dart';
+import 'package:frontend/config/api.dart'; 
 
 //colors (theming)
 
@@ -29,6 +29,7 @@ void main() {
 //check if token is valid/exists, then goes to home, otherwise go to login page. 
 
 class MyApp extends StatelessWidget {
+  
   //get token if it's available.  
   Future<bool> checkToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
 
     if (token == null) return false;
     final response = await http.get(
-      Uri.parse('http://localhost:3000/auth/auth'),
+      Uri.parse('$baseURI/auth'),
       headers: { 'Authorization': 'Bearer $token' },
     );
 

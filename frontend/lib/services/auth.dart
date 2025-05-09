@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:frontend/config/api.dart'; 
 
 //login.  On logging in successfully, the JWT token is stored in shared preferences.
 Future<bool> AuthLogin(String username, String password) async {
   final response = await http.post(
-    Uri.parse('http://localhost:3000/auth/login'),
+    Uri.parse('$baseURI/auth/login'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'username': username, 'password': password}),
   );
@@ -25,7 +25,7 @@ Future<bool> AuthLogin(String username, String password) async {
 //registration.  On registering successfully, the JWT token is stored in shared preferences.
 Future<Map<String, dynamic>> AuthRegister(String username, String email, String password) async {
   final response = await http.post(
-    Uri.parse('http://localhost:3000/auth/register'),
+    Uri.parse('$baseURI/auth/register'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'username': username, 'email': email, 'password': password}),
   );

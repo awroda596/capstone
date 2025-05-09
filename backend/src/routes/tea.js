@@ -1,14 +1,28 @@
-//handle logic for teas and tea reviews. Will move the reviews to its own file later 
+//handle routing for teas with logic delegated to services and controllers.  If handled here, will be split into those files time permitting. 
 const express = require('express');
 const Tea = require('../models/tea');
 const Review = require('../models/review');
 const router = express.Router();
-const { getTeas } = require('../services/tea.js');
+const { getTeas, findTeas} = require('../services/tea.js');
 const { authenticate } = require('../middlewares/auth.js');
 const { getTimestamp } = require('../utils/timestamp.js');
 const User = require('../models/user');
 
-// find tea documents where query is matched in any field, case insensitive.
+// search for tea documents matching the structured query from flutter.  return the results
+// use post since we're posting a query to it
+router.post('/search', async (req, res) => {
+  try {
+    const { search = "", filters = {}, offset, limit } = req.body;
+    const result = await findTeas({ search, filters, offset, limit });
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+//deprecated search. may maintain for simpler tea retrieval functions 
 router.get('/search', async (req, res) => {
   try {
     const { query, type, vendor, offset, limit } = req.query;

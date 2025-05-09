@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../services/user.dart';
+import '../../services/user.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
-import 'package:Steep_Seek_Frontend/config/api.dart'; 
+import 'package:frontend/config/api.dart'; 
+import 'package:frontend/config/api.dart'; 
 class TeaLogList extends StatefulWidget {
   const TeaLogList({super.key});
   @override
@@ -128,7 +129,7 @@ class _TeaLogListState extends State<TeaLogList> {
 
                 final token = await getJwtToken();
                 final res = await http.post(
-                  Uri.parse('${baseURI}'),
+                  Uri.parse('${baseURI}/'),
                   headers: {
                     'Authorization': 'Bearer $token',
                     'Content-Type': 'application/json',
@@ -365,7 +366,7 @@ class _TeaLogListState extends State<TeaLogList> {
                 onPressed: () async {
                   final token = await getJwtToken();
                   await http.delete(
-                    Uri.parse('http://localhost:3000/api/user/sessions/$id'),
+                    Uri.parse('$baseURI/api/user/sessions/$id'),
                     headers: {
                       'Authorization': 'Bearer $token',
                       'Content-Type': 'application/json',
@@ -397,7 +398,7 @@ class _TeaLogListState extends State<TeaLogList> {
                   };
 
                   await http.put(
-                    Uri.parse('http://localhost:3000/api/user/sessions/$id'),
+                    Uri.parse('$baseURI/api/user/sessions/$id'),
                     headers: {
                       'Authorization': 'Bearer $token',
                       'Content-Type': 'application/json',

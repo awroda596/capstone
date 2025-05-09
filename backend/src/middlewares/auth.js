@@ -23,6 +23,7 @@ const authenticate = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found' });
     }
     req.user = user;
+    console.log(`[${getTimestamp()} request authenticated for user ${user.username}.`)
     next();
   } catch (error) {
     console.log(`[${getTimestamp()}] invalid token for ${ip}`);

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../services/user.dart';
+import '../../services/user.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/services.dart';
-
+import 'package:frontend/config/api.dart'; 
 class ReviewList extends StatefulWidget {
   const ReviewList({super.key});
   @override
@@ -23,7 +23,7 @@ class _ReviewListState extends State<ReviewList> {
   Future<void> fetchReviews() async {
     final token = await getJwtToken();
     final response = await http.get(
-      Uri.parse('http://localhost:3000/api/user/reviews'),
+      Uri.parse('$baseURI/api/user/reviews'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
