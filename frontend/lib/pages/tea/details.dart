@@ -31,7 +31,7 @@ class TeaDetails extends StatelessWidget {
                     () => showDialog(
                       context: context,
                       builder:
-                          (context) => 
+                          (context) =>
                               WriteReviewDialog(teaId: tea['_id'].toString()),
                     ),
               ),
@@ -106,9 +106,8 @@ class TeaInfo extends StatelessWidget {
                     onPressed: () {
                       showDialog(
                         context: context,
-                      builder:
-                          (context) => AddToCabinet(teaId: tea['_id']),
-                      ); 
+                        builder: (context) => AddToCabinet(teaId: tea['_id']),
+                      );
                     },
                     icon: const Icon(Icons.add),
                     label: const Text('Add to Cabinet'),
@@ -122,7 +121,7 @@ class TeaInfo extends StatelessWidget {
                         'Price:',
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                      Text(tea['price'] ?? 'N/A'),
+                      Text('${tea['price']} / 2 Oz.'),
                       if (tea['type'] != null) ...[
                         const SizedBox(height: 8),
                         Text(
@@ -214,7 +213,7 @@ class Reviews extends StatelessWidget {
   Widget build(BuildContext context) {
     final username = review['username'] ?? 'Anonymous';
     final content = review['reviewText'] ?? '';
-    final notes = review['']?? '';
+    final notes = review[''] ?? '';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -227,7 +226,7 @@ class Reviews extends StatelessWidget {
             const SizedBox(height: 4),
             Text(content, maxLines: 8, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
-             Text("Tasting Notes: ${notes}"),
+            Text("Tasting Notes: ${notes}"),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
@@ -348,3 +347,4 @@ class _WriteReviewDialogState extends State<WriteReviewDialog> {
     );
   }
 }
+

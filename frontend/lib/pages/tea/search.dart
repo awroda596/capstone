@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'details.dart'; 
-import '../../services/teas.dart'; 
-import 'package:frontend/config/api.dart'; 
+import 'details.dart';
+import '../../services/teas.dart';
+import 'package:frontend/config/api.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -17,43 +17,60 @@ class _SearchPageState extends State<SearchPage> {
   String? selectedType;
   String? selectedVendor;
 
-  final List<String> types = ['', 'White', 'Green', 'Oolong', 'Black', 'Puerh', 'Other'];
-  final List<String> vendors = ['', 'Red Blossom Tea Company', 'Eco-Cha', 'What-Cha', 'Old Ways Tea', 'Yunnan Sourcing'];
+  //deprecated, from old drop down
+  final List<String> types = [
+    '',
+    'White',
+    'Green',
+    'Oolong',
+    'Black',
+    'Puerh',
+    'Other',
+  ];
+  final List<String> vendors = [
+    '',
+    'Red Blossom Tea Company',
+    'Eco-Cha',
+    'What-Cha',
+    'Old Ways Tea',
+    'Yunnan Sourcing',
+  ];
 
   bool isLoading = false;
-  bool hasMore = false;  //if there's more (for nextpage) teas given search results. manages if nextpage is available
+  bool hasMore =
+      false; //if there's more (for nextpage) teas given search results. manages if nextpage is available
   int currentPage = 0;
   final int pageSize = 20;
   List<dynamic> results = [];
   String? error;
-
+  String SelectedFilters = '';
   //search for teas, update interface.  used for pagination as well
   Future<void> searchAndUpdate({int page = 0}) async {
-  final searchText = searchController.text.trim();
-
-  setState(() {
-    error = null;
-    isLoading = true;
-  });
-
-  try {
-    final result = await searchTeas(
-      searchInput: searchText,
-      page: page,
-      pageSize: pageSize,
-    );
+    final searchText = '$SelectedFilters ${searchController.text}'.trim();
 
     setState(() {
-      results = List.from(result['results'] ?? []);
-      hasMore = result['hasMore'] ?? false;
-      currentPage = page;
+      error = null;
+      isLoading = true;
     });
-  } catch (e) {
-    setState(() => error = e.toString());
-  } finally {
-    setState(() => isLoading = false);
+
+    try {
+      final result = await searchTeas(
+        searchInput: searchText,
+        page: page,
+        pageSize: pageSize,
+      );
+
+      setState(() {
+        results = List.from(result['results'] ?? []);
+        hasMore = result['hasMore'] ?? false;
+        currentPage = page;
+      });
+    } catch (e) {
+      setState(() => error = e.toString());
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
-}
 
   Widget searchBar() {
     return Column(
@@ -72,6 +89,26 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
               const SizedBox(width: 10),
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                tooltip: 'Set filters',
+                onPressed: () {
+                  showFilterDialog(context, (filters) {
+                    setState(() {
+                      SelectedFilters = filters;
+                    });
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.clear),
+                tooltip: 'Clear filters',
+                onPressed: () {
+                  setState(() {
+                    SelectedFilters = '';
+                  });
+                },
+              ),
               ElevatedButton(
                 onPressed: () => searchAndUpdate(page: 0),
                 child: const Text('Search'),
@@ -136,7 +173,9 @@ class _SearchPageState extends State<SearchPage> {
             itemBuilder: (context, index) {
               final item = results[index];
               return Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 3,
                 margin: const EdgeInsets.only(bottom: 12),
                 child: Padding(
@@ -148,12 +187,25 @@ class _SearchPageState extends State<SearchPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item['name'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            Text(
+                              item['name'],
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             const SizedBox(height: 4),
-                            Text(item['vendor'] ?? 'no vendor, please report this bug!!'),
-                            if (item['type'] != null) Text('Type: ${item['type']}'),
-                            if (item['rating'] != null) Text('rating: ${(item['rating'] as num).toStringAsFixed(2)}'), 
-                            Text('Price: ${item['price']}')                      
+                            Text(
+                              item['vendor'] ??
+                                  'no vendor, please report this bug!!',
+                            ),
+                            if (item['type'] != null)
+                              Text('Type: ${item['type']}'),
+                            if (item['rating'] != null)
+                              Text(
+                                'rating: ${(item['rating'] as num).toStringAsFixed(2)}',
+                              ),
+                            Text('Price: ${item['price']} per 2 Oz.'),
                           ],
                         ),
                       ),
@@ -181,14 +233,20 @@ class _SearchPageState extends State<SearchPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: currentPage > 0 && !isLoading ? () => searchAndUpdate(page: currentPage - 1) : null,
+                onPressed:
+                    currentPage > 0 && !isLoading
+                        ? () => searchAndUpdate(page: currentPage - 1)
+                        : null,
                 child: const Text('Previous'),
               ),
               const SizedBox(width: 16),
               Text('Page ${currentPage + 1}'),
               const SizedBox(width: 16),
               ElevatedButton(
-                onPressed: hasMore && !isLoading ? () => searchAndUpdate(page: currentPage + 1) : null,
+                onPressed:
+                    hasMore && !isLoading
+                        ? () => searchAndUpdate(page: currentPage + 1)
+                        : null,
                 child: const Text('Next'),
               ),
             ],
@@ -200,12 +258,91 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        searchBar(),
-        Expanded(child: searchResults()),
-      ],
-    );
+    return Column(children: [searchBar(), Expanded(child: searchResults())]);
   }
 }
 
+//wip filter box:  right now it is button form but will be checkboxes later
+void showFilterDialog(
+  BuildContext context,
+  Function(String selectedFilters) onApply,
+) {
+  String? vendor;
+  String? type;
+  String? origin;
+  String? harvest;
+
+  showDialog(
+    context: context,
+    builder:
+        (context) => AlertDialog(
+          title: const Text('Filter Search'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: vendor,
+                decoration: const InputDecoration(labelText: 'Vendor'),
+                items:
+                    [
+                          'Red Blossom Tea Company',
+                          'Eco-Cha',
+                          'Yunnan Sourcing',
+                          'Crimson Lotus',
+                        ]
+                        .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                        .toList(),
+                onChanged: (value) => vendor = value,
+              ),
+              DropdownButtonFormField<String>(
+                value: type,
+                decoration: const InputDecoration(labelText: 'Type'),
+                items:
+                    ['White', 'Puerh', 'Oolong', 'Green', 'Black']
+                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                        .toList(),
+                onChanged: (value) => type = value,
+              ),
+              DropdownButtonFormField<String>(
+                value: origin,
+                decoration: const InputDecoration(labelText: 'Origin'),
+                items:
+                    ['China', 'Japan', 'India']
+                        .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+                        .toList(),
+                onChanged: (value) => origin = value,
+              ),
+              DropdownButtonFormField<String>(
+                value: harvest,
+                decoration: const InputDecoration(labelText: 'Harvest Season'),
+                items:
+                    ['Spring', 'Summer', 'Autumn', 'Winter']
+                        .map((h) => DropdownMenuItem(value: h, child: Text(h)))
+                        .toList(),
+                onChanged: (value) => harvest = value,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final filters = [
+                  if (vendor != null) 'vendor:$vendor,',
+                  if (type != null) 'type:$type,',
+                  if (origin != null) 'origin:$origin,',
+                  if (harvest != null) 'harvest:$harvest,',
+                ].join(' ');
+
+                Navigator.pop(context);
+                onApply(filters);
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        ),
+  );
+}
