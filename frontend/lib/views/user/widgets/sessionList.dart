@@ -3,7 +3,7 @@ import '../../../services/user.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-
+import 'package:flutter/services.dart';
 class TeaLogList extends StatefulWidget {
   const TeaLogList({super.key});
   @override
@@ -470,3 +470,202 @@ class _TeaLogListState extends State<TeaLogList> {
   }
 }
 
+class ViewSessionDialog extends StatefulWidget {
+  final Map<String, dynamic> session;
+  final VoidCallback onRefresh;
+  final Function(Map<String, dynamic>)? onSessionUpdated; 
+
+  const ViewSessionDialog({
+    super.key,
+    required this.session,
+    required this.onRefresh,
+    this.onSessionUpdated,
+  });
+
+  @override
+  State<ViewSessionDialog> createState() => _ViewSessionDialogState();
+}
+
+
+class _ViewSessionDialogState extends State<ViewSessionDialog> {
+  late Map<String, dynamic> session;
+  bool isEditing = false;
+  String? errorMessage;
+  late TextEditingController reviewTextController;
+  late TextEditingController flavorNotesController;
+  late TextEditingController ratingController;
+
+  @override
+  void initState() {
+    super.initState();
+    session = Map<String, dynamic>.from(widget.session);
+    reviewTextController = TextEditingController(text: session['reviewText']);
+    flavorNotesController = TextEditingController(text: session['flavorNotes']);
+    ratingController = TextEditingController(
+      text: session['rating']?.toString() ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    reviewTextController.dispose();
+    flavorNotesController.dispose();
+    ratingController.dispose();
+    super.dispose();
+  }
+
+  void _saveChanges() async {
+    final rating = int.tryParse(ratingController.text);
+    if (rating == null || rating < 0 || rating > 10) {
+      setState(() {
+        errorMessage = 'Rating must be between 0 and 10';
+      });
+      return;
+    }
+
+    try {
+      final updated = await updateReview(session['_id'], {
+        'reviewText': reviewTextController.text,
+        'flavorNotes': flavorNotesController.text,
+        'rating': rating,
+      });
+
+      setState(() {
+        session = updated;
+        isEditing = false;
+        errorMessage = null;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Failed to update review. Please try again.';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          session['teaName'] ?? 'Unnamed',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          session['teaVendor'] ?? 'Unknown Vendor',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(isEditing ? Icons.close : Icons.edit),
+                    onPressed: () {
+                      setState(() => isEditing = !isEditing);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Review Text
+              isEditing
+                  ? TextField(
+                    controller: reviewTextController,
+                    decoration: const InputDecoration(labelText: 'Review'),
+                    maxLines: 4,
+                  )
+                  : Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      session['reviewText'] ?? 'No review provided.',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+              const SizedBox(height: 12),
+
+              // Flavor Notes
+              isEditing
+                  ? TextField(
+                    controller: flavorNotesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Flavor Notes',
+                    ),
+                  )
+                  : Text(
+                    'Flavor Notes: ${session['flavorNotes'] ?? 'None'}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              const SizedBox(height: 12),
+
+              // Rating
+              isEditing
+                  ? TextField(
+                    controller: ratingController,
+                    decoration: const InputDecoration(
+                      labelText: 'Rating (0–10)',
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                    ],
+                  )
+                  : Text(
+                    'Rating: ${session['rating'] ?? '?'} / 10',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              const SizedBox(height: 24),
+
+              // Actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (isEditing)
+                    ElevatedButton(
+                      onPressed: _saveChanges,
+                      child: const Text('Save'),
+                    ),
+                  if (!isEditing)
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Close'),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

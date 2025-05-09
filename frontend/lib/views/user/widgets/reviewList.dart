@@ -254,7 +254,7 @@ class _ViewReviewDialogState extends State<ViewReviewDialog> {
                     ),
                   )
                   : Text(
-                    'Flavor Notes: ${review['flavorNotes'] ?? 'None'}',
+                    'Flavor Notes: ${review['notes'] ?? 'None'}',
                     style: const TextStyle(
                       fontSize: 14,
                       fontStyle: FontStyle.italic,
