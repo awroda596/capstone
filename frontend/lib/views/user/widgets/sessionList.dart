@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import 'package:Steep_Seek_Frontend/config/api.dart'; 
 class TeaLogList extends StatefulWidget {
   const TeaLogList({super.key});
   @override
@@ -127,7 +128,7 @@ class _TeaLogListState extends State<TeaLogList> {
 
                 final token = await getJwtToken();
                 final res = await http.post(
-                  Uri.parse('http://localhost:3000/api/user/sessions'),
+                  Uri.parse('${baseURI}'),
                   headers: {
                     'Authorization': 'Bearer $token',
                     'Content-Type': 'application/json',
@@ -151,10 +152,12 @@ class _TeaLogListState extends State<TeaLogList> {
   );
 }
 
+
+//move later to like auth or something.  refactor to deal with setState
   Future<void> fetchSessions() async {
     final token = await getJwtToken();
     final response = await http.get(
-      Uri.parse('http://localhost:3000/api/user/sessions'),
+      Uri.parse('$baseURI/api/user/sessions'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
