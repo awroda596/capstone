@@ -433,7 +433,7 @@ class _FilterDialogState extends State<FilterDialog> {
           ),
 
           const SizedBox(height: 16),
-          const Text('Price Range (\$ per 2 Oz.)'),
+          const Text('Price Range: '),
           Row(
             children: [
               Expanded(
