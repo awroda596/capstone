@@ -11,10 +11,11 @@ const sessionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  temperature: String,
-  weight: String,
-  volume: String,
-  steep: String
+  flavorNotes: {type: String},
+  brewTemp: {type: String},
+  brewWeight: {type: String},
+  brewVolume:{type: String},
+  brewTime: {type: String},
 }, { timestamps: true });
 
 const Session = mongoose.model('Session', sessionSchema);

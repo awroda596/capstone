@@ -4,18 +4,36 @@ import '../../services/teas.dart';
 import 'package:frontend/pages/widgets/linktext.dart';
 
 //framework for the tea details and user reviews.
-class TeaDetails extends StatelessWidget {
+class TeaDetails extends StatefulWidget {
   final Map<String, dynamic> tea;
   const TeaDetails({super.key, required this.tea});
 
   @override
+  State<TeaDetails> createState() => _TeaDetailsState();
+}
+
+class _TeaDetailsState extends State<TeaDetails> {
+  late Future<List<Map<String, dynamic>>> reviews;
+  @override
+  @override
+  void initState() {
+    super.initState();
+    reviews = fetchReviews(widget.tea['_id'].toString());
+  }
+
+  void refreshReviews() {
+    setState(() {
+      reviews = fetchReviews(widget.tea['_id'].toString());
+    });
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tea['name'] ?? 'Tea Details')),
+      appBar: AppBar(title: Text(widget.tea['name'] ?? 'Tea Details')),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          TeaInfo(tea: tea),
+          TeaInfo(tea: widget.tea),
           const SizedBox(height: 24),
           const Divider(),
           Row(
@@ -27,19 +45,23 @@ class TeaDetails extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.edit),
-                onPressed:
-                    () => showDialog(
-                      context: context,
-                      builder:
-                          (context) =>
-                              WriteReviewDialog(teaId: tea['_id'].toString()),
-                    ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder:
+                        (context) => WriteReviewDialog(
+                          teaId: widget.tea['_id'].toString(),
+                        ),
+                  ).then((_) {
+                    refreshReviews(); // <-- This runs after dialog closes
+                  });
+                },
               ),
             ],
           ),
           const SizedBox(height: 12),
           FutureBuilder<List<Map<String, dynamic>>>(
-            future: fetchReviews(tea['_id'].toString()),
+            future: reviews,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -216,7 +238,8 @@ class Reviews extends StatelessWidget {
   Widget build(BuildContext context) {
     final username = review['username'] ?? 'Anonymous';
     final content = review['reviewText'] ?? '';
-    final notes = review[''] ?? '';
+    final notes = review['notes'] ?? '';
+    final rating = review['rating'] ?? '';
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -227,9 +250,11 @@ class Reviews extends StatelessWidget {
           children: [
             Text(username, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text(content, maxLines: 8, overflow: TextOverflow.ellipsis),
+            Text("rating: $rating"),
             const SizedBox(height: 4),
-            Text("Tasting Notes: ${notes}"),
+            Text(content, maxLines: 8),
+            const SizedBox(height: 4),
+            Text("Tasting Notes: $notes"),
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton(
@@ -260,7 +285,7 @@ class Reviews extends StatelessWidget {
 
 class WriteReviewDialog extends StatefulWidget {
   final String teaId;
-  const WriteReviewDialog({super.key, required this.teaId});
+  WriteReviewDialog({super.key, required this.teaId});
 
   @override
   State<WriteReviewDialog> createState() => _WriteReviewDialogState();
@@ -272,7 +297,7 @@ class _WriteReviewDialogState extends State<WriteReviewDialog> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _ratingController = TextEditingController();
 
-  void SubmitSuccess(String message) {
+  void submitSuccess(String message) {
     Navigator.of(context).pop();
     showDialog(
       context: context,
@@ -282,7 +307,9 @@ class _WriteReviewDialogState extends State<WriteReviewDialog> {
             content: Text(message),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
                 child: const Text('OK'),
               ),
             ],
@@ -341,7 +368,7 @@ class _WriteReviewDialogState extends State<WriteReviewDialog> {
                 notes: _notesController.text.trim(),
                 ratingText: _ratingController.text.trim(),
               );
-              SubmitSuccess(message);
+              submitSuccess(message);
             }
           },
           child: const Text('Submit'),

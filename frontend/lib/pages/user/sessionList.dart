@@ -126,10 +126,10 @@ class _TeaLogListState extends State<TeaLogList> {
                   'brewTemp': tempController.text.trim(),
                   'brewTime': timeController.text.trim(),
                 };
-
+                print("Posting session to ${baseURI}/api/user/sessions\n"); 
                 final token = await getJwtToken();
                 final res = await http.post(
-                  Uri.parse('${baseURI}/'),
+                  Uri.parse('${baseURI}/api/user/sessions'),
                   headers: {
                     'Authorization': 'Bearer $token',
                     'Content-Type': 'application/json',
@@ -167,6 +167,7 @@ class _TeaLogListState extends State<TeaLogList> {
     if (response.statusCode == 200) {
       setState(() {
         sessions = json.decode(response.body);
+        sessions = sessions.reversed.toList();
         isLoading = false;
       });
     }
@@ -247,9 +248,9 @@ class _TeaLogListState extends State<TeaLogList> {
                         session['brewVolume'] != null ||
                         session['brewTemp'] != null)
                       Text(
-                        '${session['brewWeight'] ?? '?'}g, '
-                        '${session['brewVolume'] ?? '?'}ml, '
-                        '${session['brewTemp'] ?? '?'}°C',
+                        'brewed ${session['brewWeight'] ?? '?'}g tea with '
+                        '${session['brewVolume'] ?? '?'}ml water at '
+                        '${session['brewTemp'] ?? '?'}°C for',
                         style: const TextStyle(fontSize: 14),
                       ),
                     if (session['brewTime'] != null)

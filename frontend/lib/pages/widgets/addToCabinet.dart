@@ -60,7 +60,7 @@ class _AddToCabinetState extends State<AddToCabinet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           AppBar(
-            title: const Text('Select Lists:'),
+            title: const Text('Select Shelf:'),
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.of(context).pop(),
@@ -77,9 +77,8 @@ class _AddToCabinetState extends State<AddToCabinet> {
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 400),
               child: SingleChildScrollView(
-                child: Wrap(
+                child: Column(
                   spacing: 8,
-                  runSpacing: 8,
                   children:
                       userShelves.map((shelf) {
                         final id = shelf['_id'];
