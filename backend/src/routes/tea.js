@@ -124,7 +124,17 @@ router.post('/reviews', authenticate, async (req, res) => {
   }
 });
 
-
-
+router.get('/teas/:id', async (req, res) => {
+  try {
+    const tea = await Tea.findById(req.params.id);
+    if (!tea) {
+      return res.status(404).json({ error: 'Tea not found' });
+    }
+    res.json(tea);
+  } catch (err) {
+    console.error('Error fetching tea by ID:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 module.exports = router;

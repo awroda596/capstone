@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'user.dart'; 
-import 'package:frontend/config/api.dart'; 
+import 'user.dart';
+import 'package:frontend/config/api.dart';
+
 //place holder for tea search functionality
 Future<String> submitReview({
   required String teaId,
@@ -72,7 +73,6 @@ Future<List<Map<String, dynamic>>> fetchReviews(String teaId) async {
   }
 }
 
-
 Future<Map<String, dynamic>> searchTeas({
   required String searchInput,
   required int page,
@@ -86,7 +86,7 @@ Future<Map<String, dynamic>> searchTeas({
 
   final res = await http.post(
     uri,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {'Content-Type': 'application/json'},
     body: jsonEncode(query),
   );
 
@@ -97,28 +97,50 @@ Future<Map<String, dynamic>> searchTeas({
   }
 }
 
-//build a structured query based off the query text 
-//built with ChatGPT's help for parsing the query text. 
+//build a structured query based off the query text
+//built with ChatGPT's help for parsing the query text.
 Map<String, dynamic> buildQuery(String input) {
   final filters = <String, List<String>>{};
   final searchTerms = <String>[];
 
-  for (final part in input.split(',')) { //split query by commas
+  for (final part in input.split(',')) {
+    //split query by commas
     final trimmed = part.trim(); //trim
-    final colonIndex = trimmed.indexOf(':');  //split each sub query by : to split the field and the searchtext 
+    final colonIndex = trimmed.indexOf(
+      ':',
+    ); //split each sub query by : to split the field and the searchtext
 
-    
-    if (colonIndex != -1) { //re-assemble the query to group values in the same fields in json form
+    if (colonIndex != -1) {
+      //re-assemble the query to group values in the same fields in json form
       final key = trimmed.substring(0, colonIndex).trim().toLowerCase();
       final value = trimmed.substring(colonIndex + 1).trim();
-      filters.putIfAbsent(key, () => []).add(value); //if new key, create it, then ad the new value to it.
+      filters
+          .putIfAbsent(key, () => [])
+          .add(value); //if new key, create it, then ad the new value to it.
     } else {
       searchTerms.add(trimmed);
     }
   }
 
-  return {
-    "search": searchTerms.join(' '),
-    "filters": filters,
-  };
+  return {"search": searchTerms.join(' '), "filters": filters};
+}
+
+Future<Map<String, dynamic>> getTea(String teaID) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  final uri = Uri.parse('$baseURI/api/teas/$teaID');
+
+  final res = await http.get(
+    uri,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+  if (res.statusCode == 200) {
+    return jsonDecode(res.body);
+  } else {
+    throw Exception('Search failed with status: ${res.statusCode}');
+  }
 }

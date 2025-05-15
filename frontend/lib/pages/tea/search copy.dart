@@ -116,11 +116,54 @@ class _SearchPageState extends State<SearchPage> {
             ],
           ),
         ),
+        /*  To be replaced by dialogue box!  
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: selectedType,
+                  hint: const Text('Select Type'),
+                  items: types.map((type) => DropdownMenuItem(
+                    value: type,
+                    child: Text(type.isEmpty ? 'All Types' : type),
+                  )).toList(),
+                  onChanged: (value) => setState(() => selectedType = value),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: selectedVendor,
+                  hint: const Text('Select Vendor'),
+                  items: vendors.map((vendor) => DropdownMenuItem(
+                    value: vendor,
+                    child: Text(vendor.isEmpty ? 'All Vendors' : vendor),
+                  )).toList(),
+                  onChanged: (value) => setState(() => selectedVendor = value),
+                ),
+              ),
+            ],
+          ),
+        ), */
       ],
     );
   }
 
-  Widget searchResultsList() {
+  Widget searchResults() {
+    if (isLoading && results.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (error != null) {
+      return Center(child: Text(error!));
+    }
+
+    if (results.isEmpty) {
+      return const Center(child: Text('No results'));
+    }
+
     return Column(
       children: [
         Expanded(
@@ -152,12 +195,15 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(item['vendor'] ?? 'no vendor'),
+                            Text(
+                              item['vendor'] ??
+                                  'no vendor, please report this bug!!',
+                            ),
                             if (item['type'] != null)
                               Text('Type: ${item['type']}'),
                             if (item['rating'] != null)
                               Text(
-                                'Rating: ${(item['rating'] as num).toStringAsFixed(2)}',
+                                'rating: ${(item['rating'] as num).toStringAsFixed(2)}',
                               ),
                             Text('Price: ${item['price']} per 2 Oz.'),
                           ],
@@ -210,36 +256,6 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget searchResults() {
-    if (isLoading) {
-      return Stack(
-        children: [
-          if (results.isNotEmpty)
-            searchResultsList()
-          else
-            const Center(child: Text('Loading...')),
-
-          const Positioned.fill(
-            child: Align(
-              alignment: Alignment.center,
-              child: CircularProgressIndicator(),
-            ),
-          ),
-        ],
-      );
-    }
-
-    if (error != null) {
-      return Center(child: Text(error!));
-    }
-
-    if (results.isEmpty) {
-      return const Center(child: Text('No results'));
-    }
-
-    return searchResultsList();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(children: [searchBar(), Expanded(child: searchResults())]);
@@ -282,7 +298,7 @@ void showFilterDialog(
                 value: type,
                 decoration: const InputDecoration(labelText: 'Type'),
                 items:
-                    ['White', 'Pu-erh', 'Oolong', 'Green', 'Black']
+                    ['White', 'Puerh', 'Oolong', 'Green', 'Black']
                         .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                         .toList(),
                 onChanged: (value) => type = value,

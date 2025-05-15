@@ -224,7 +224,6 @@ router.post ('/shelves/:shelfId/teas', authenticate, async (req,res) => {
 
 
 router.get('/shelves', authenticate, async (req, res) => {
-  console.log("has to hit this"); 
   try {
     user = req.user; 
     if (!req.user) {
@@ -243,7 +242,7 @@ router.get('/shelves', authenticate, async (req, res) => {
     const formatted = shelves.map(shelf => ({
       _id: shelf._id,
       shelfLabel: shelf.shelfLabel,
-      teas: shelf.teas.map(t => t.name),
+      teas: shelf.teas
     }));
 
     res.json(formatted);
