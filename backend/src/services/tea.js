@@ -236,7 +236,7 @@ async function findTeas({
   offset = 0,
   limit = 20
 }) {
-  const query = { $and: [] };
+  const query = { $and: [] }; //fill query with all the filter parameters
 
   if (search?.trim() && Array.isArray(search_fields)) {
     const regex = new RegExp(search.trim(), "i");
@@ -261,7 +261,6 @@ async function findTeas({
       query.$and.push({ [field]: { $in: filters[field] } });
     }
   });
-  //rating
 
 
   if (query.$and.length === 0) delete query.$and;

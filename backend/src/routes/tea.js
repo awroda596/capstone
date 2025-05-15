@@ -23,6 +23,7 @@ router.post('/search', async (req, res) => {
 
 
 //deprecated search. may maintain for simpler tea retrieval functions 
+/*
 router.get('/search', async (req, res) => {
   try {
     const { query, type, vendor, offset, limit } = req.query;
@@ -33,7 +34,7 @@ router.get('/search', async (req, res) => {
     res.status(500).json({ error: 'Search failed' });
   }
 });
-
+*/
 // get reviews for a specific tea 
 router.get('/reviews', authenticate, async (req, res) => {
   try {
