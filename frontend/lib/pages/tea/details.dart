@@ -187,6 +187,14 @@ class TeaInfo extends StatelessWidget {
                         ),
                         Text(tea['harvest']),
                       ],
+                      if (tea['flavorNotes'] != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Flavor Notes:',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        Text(tea['flavorNotes']),
+                      ],
                     ],
                   ),
                 ],

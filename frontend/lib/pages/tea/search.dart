@@ -361,7 +361,7 @@ class _FilterDialogState extends State<FilterDialog> {
             'type',
             'style',
             'description',
-            'flavor_notes',
+            'flavorNotes',
             'harvest',
             'origin',
           ].map(
