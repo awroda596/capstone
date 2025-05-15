@@ -167,7 +167,7 @@ class _TeaLogListState extends State<TeaLogList> {
     if (response.statusCode == 200) {
       setState(() {
         sessions = json.decode(response.body);
-        sessions = sessions.reversed.toList();
+        sessions = sessions.reversed.toList(); //reverse for latest to  oldest
         isLoading = false;
       });
     }

@@ -243,39 +243,19 @@ class Reviews extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
+      child: Container(
+        width: double.infinity, // Fills horizontal space
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(username, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text("rating: $rating"),
+            Text("rating: $rating/10"),
             const SizedBox(height: 4),
             Text(content, maxLines: 8),
             const SizedBox(height: 4),
             Text("Tasting Notes: $notes"),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed:
-                    () => showDialog(
-                      context: context,
-                      builder:
-                          (_) => AlertDialog(
-                            title: Text(username),
-                            content: Text(content),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          ),
-                    ),
-                child: const Text('Read full review'),
-              ),
-            ),
           ],
         ),
       ),

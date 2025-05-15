@@ -235,8 +235,8 @@ router.get('/shelves', authenticate, async (req, res) => {
 
     if (!user.shelves || user.shelves.length === 0) return res.json([]);
 
-    const shelves = await Shelf.find({ _id: { $in: user.shelves } }).populate('teas', 'name');
-
+    const shelves = await Shelf.find({ _id: { $in: user.shelves } }).populate('teas');
+    
     console.log('Fetched shelves:', shelves);
 
     const formatted = shelves.map(shelf => ({
