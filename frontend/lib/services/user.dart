@@ -51,7 +51,7 @@ Future<void> updateAvatar(XFile image) async {
   final token = await getJwtToken();
   if (token == null) throw Exception('No token');
 
-  final bytes = await image.readAsBytes(); // ✅ works on all platforms
+  final bytes = await image.readAsBytes(); // =
   final base64Image = base64Encode(bytes);
 
   final res = await http.post(

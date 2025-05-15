@@ -53,7 +53,7 @@ void _showRegistrationDialog() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Spill the Tea")),
+      appBar: AppBar(title: Text("Steep Seek")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(

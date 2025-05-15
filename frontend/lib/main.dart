@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Spill the Tea',
+      title: 'Steep Seek'
       theme: appTheme, //defined in theme in config
       home: FutureBuilder<bool>(
         future: checkToken(),

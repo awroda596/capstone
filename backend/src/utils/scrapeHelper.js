@@ -144,7 +144,7 @@ async function scrapeDescriptionWhatCha(page) {
     
       paragraphs.forEach(p => {
         const text = p.innerText.trim();
-    
+        
         if (text.startsWith('Tasting Notes')) {
           result.flavorNotes = text.replace(/^Tasting Notes:\s*/, '');
         } else if (text.startsWith('Harvest')) {
