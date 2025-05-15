@@ -32,9 +32,28 @@ const ecoChaTypeSelector = (url) => {
     return 'other';
 };
 
+const whatChaTypeSelector = (url) => {
+    if (url.includes('oolong')) return 'Oolong';
+    if (url.includes('white')) return 'White';
+    if (url.includes('black')) return 'Black';
+    if (url.includes('green')) return 'Green';
+    if (url.includes('pu-erh')) return 'Pu-erh';
+    return 'other';
+};
 
 
 //scraping selectors
+const whatChaScrapeSelectors = {
+    awaitSelector: '.products .thumbnail', 
+    productSelector: '.products .thumbnail',
+    nameSelector: '.info .title', 
+    priceSelector: '.info .price span[itemprop="price"]', 
+    paginationSelector: '.scroll',
+    detailSelector: 'div.description[itemprop="description"]',
+    detailDescriptionSelector: '.product-description',
+    detailFlavorNotesSelector: '.product-flavor-notes',
+    detailImagesSelector: '.product-images img',
+  };
 const redBlossomTeaScrapeSelectors = {
     awaitSelector: '.page-body-content',
     productSelector: '.page-body-content .product-list.row-of-4 li',
@@ -47,7 +66,6 @@ const redBlossomTeaScrapeSelectors = {
     detailImagesSelector: '.product-images img',
     
 };
-
 
 
 const ecoChaScrapeSelectors = {
@@ -63,10 +81,6 @@ const ecoChaScrapeSelectors = {
 };
 
 
-const redBlossomTeaDetailSelectors = {
-
-
-};
 //sites  set urls, scraping, and types for each website
 const sites = [
     {
@@ -92,6 +106,19 @@ const sites = [
         scrapeSelector: ecoChaScrapeSelectors,
         vendor: 'Eco-Cha',
         typeSelector: ecoChaTypeSelector,
+    },
+    {
+        site: 'What-Cha',
+        urls: [
+            'https://what-cha.com/collections/oolong-tea',
+            'https://what-cha.com/collections/white-tea',
+            'https://what-cha.com/collections/black-tea',
+            'https://what-cha.com/collections/puerh-tea',
+            'https://what-cha.com/collections/green-tea',
+        ],
+        scrapeSelector: whatChaScrapeSelectors,
+        vendor: 'What-Cha',
+        typeSelector: whatChaTypeSelector,
     }
   ];
 

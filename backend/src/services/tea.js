@@ -172,7 +172,7 @@ async function updateTea(tea, details) {
     const updatedTea = await Tea.findByIdAndUpdate(
       tea._id, // Use the tea's _id for the update
       { $set: details },
-      { new: true } 
+      { new: true }
     );
 
 
@@ -228,44 +228,51 @@ const markLostTeas = async (teas) => {
 }
 
 
-//parse through the structured query and find matching teas!
-async function findTeas({ search, filters, offset = 0, limit = 20 }) {
- const query = { $and: [] };
+//parse through the query and return the teas!
+async function findTeas({
+  search, //actual search text
+  search_fields = ['name'],
+  filters = {}, //destructured filters
+  offset = 0,
+  limit = 20
+}) {
+  const query = { $and: [] };
 
-  // Text search on name, description, flavorNotes
-  if (search?.trim()) {
+  if (search?.trim() && Array.isArray(search_fields)) {
     const regex = new RegExp(search.trim(), "i");
+
     query.$and.push({
-      $or: [
-        { name: { $regex: regex } },
-        { description: { $regex: regex } },
-        { flavorNotes: { $regex: regex } }
-      ]
+      $or: search_fields.map(field => ({ [field]: { $regex: regex } }))
     });
   }
 
-  // Exact-match filters with $in
-  const arrayFields = ['vendor', 'type', 'origin', 'style', 'harvest'];
+  const arrayFields = [
+    'name',
+    'vendor',
+    'description',
+    'flavorNotes',
+    'type',
+    'origin',
+    'harvest',
+    'style',
+  ];
   arrayFields.forEach(field => {
     if (filters[field]?.length) {
       query.$and.push({ [field]: { $in: filters[field] } });
     }
   });
-
-  // Rating: treat as minimum rating
-  if (typeof filters.rating === 'number') {
-    query.$and.push({ rating: { $gte: filters.rating } });
+  //rating
+  if (typeof filters.minRating === 'number' || typeof filters.maxRating === 'number') {
+    const ratingQuery = {};
+    if (typeof filters.minRating === 'number') ratingQuery.$gte = filters.minRating;
+    if (typeof filters.maxRating === 'number') ratingQuery.$lte = filters.maxRating;
+    query.$and.push({ rating: ratingQuery });
   }
-
-  // Price range
-  if (filters.price?.min != null || filters.price?.max != null) {
+  //price
+  if (typeof filters.minPrice === 'number' || typeof filters.maxPrice === 'number') {
     const priceQuery = {};
-    if (typeof filters.price.min === 'number') {
-      priceQuery.$gte = filters.price.min;
-    }
-    if (typeof filters.price.max === 'number') {
-      priceQuery.$lte = filters.price.max;
-    }
+    if (typeof filters.minPrice === 'number') priceQuery.$gte = filters.minPrice;
+    if (typeof filters.maxPrice === 'number') priceQuery.$lte = filters.maxPrice;
     query.$and.push({ price: priceQuery });
   }
 

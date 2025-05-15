@@ -3,7 +3,7 @@ const express = require('express');
 const Tea = require('../models/tea');
 const Review = require('../models/review');
 const router = express.Router();
-const { getTeas, findTeas} = require('../services/tea.js');
+const { getTeas, findTeas } = require('../services/tea.js');
 const { authenticate } = require('../middlewares/auth.js');
 const { getTimestamp } = require('../utils/timestamp.js');
 const User = require('../models/user');
@@ -12,8 +12,8 @@ const User = require('../models/user');
 // use post since we're posting a query to it
 router.post('/search', async (req, res) => {
   try {
-    const { search = "", filters = {}, offset, limit } = req.body;
-    const result = await findTeas({ search, filters, offset, limit });
+    const { search = "", search_fields = ['name'], filters = {}, offset, limit } = req.body;
+    const result = await findTeas({ search, search_fields, filters, offset, limit });
     res.json(result);
   } catch (err) {
     console.error(err);

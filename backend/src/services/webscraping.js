@@ -39,13 +39,20 @@ const scrapeTeas = async () => {
           try {
             console.log(`[${getTimestamp()}] Scraping ${url} page ${pageNum}...`);
             await page.waitForSelector(awaitSelector);
+            if(paginationSelector == 'scroll'){
+              scrollProducts(page, productSelector); 
+            }
             const type = typeSelector(url);
+            //prouduct selector should select the top level that contains every tea on page as close as possible
+            // page function (named productElement and destructure args)
+            // return it as a mapped object
             const teas = await page.$$eval(productSelector, (productElements, { nameSelector, priceSelector, sVendor, teaType }) => {
               return productElements.map((productElement) => {
                 const nameElement = productElement.querySelector(nameSelector);
                 const priceElement = productElement.querySelector(priceSelector);
+                const anchor = productElement.querySelector('a'); 
                 const name = nameElement ? nameElement.textContent.trim() : null;
-                const link = nameElement ? nameElement.href : 'N/A';
+                const link = anchor?.href ?? 'N/A';
                 let price = priceElement ? priceElement.textContent.trim() : 'Sold Out';
                 const vendor = sVendor;
                 if (price.toLowerCase().startsWith('us$')) {
@@ -53,7 +60,7 @@ const scrapeTeas = async () => {
                 }
                 const isScraped = true;
                 return { name, type: teaType, vendor, link, price, isScraped };
-              }).filter(tea => tea.name && !/collection|sample|flight|club/i.test(tea.name));
+              }).filter(tea => tea.name && !/collection|sample|flight|club/i.test(tea.name)); //keep it to single teas for simplicity sake
             }, { nameSelector, priceSelector, sVendor, teaType: type });
             
             
@@ -62,21 +69,24 @@ const scrapeTeas = async () => {
             createCount += pushResults.createCount;
             updateCount += pushResults.updateCount;
             siteTeas = siteTeas.concat(teas); // Add scraped teas to the siteTeas array
-            // check for next page
-            const nextPageLink = await page.$(paginationSelector);  //
-            if (nextPageLink) {
-              //console.log('[${getTimestamp()}] checking for next page');
-              const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);
-              await page.goto(nextPageUrl);
-              pageNum++;
-              //console.log(`[${getTimestamp()}] Navigating to page ${pageNum}...`);
-              const currentUrl = await page.url();
-              //console.log('[${getTimestamp()}] Current page URL:', currentUrl);
-              await page.waitForTimeout(2000);
-            } else {
-              //console.log('[${getTimestamp()}] No more pages to scrape.');
-              break;
+            // check for next page if not of type scroll
+            if(paginationSelector != 'scroll'){
+              const nextPageLink = await page.$(paginationSelector);  //
+              if (nextPageLink) {
+                //console.log('[${getTimestamp()}] checking for next page');
+                const nextPageUrl = await page.evaluate((link) => link.href, nextPageLink);
+                await page.goto(nextPageUrl);
+                pageNum++;
+                //console.log(`[${getTimestamp()}] Navigating to page ${pageNum}...`);
+                const currentUrl = await page.url();
+                //console.log('[${getTimestamp()}] Current page URL:', currentUrl);
+                await page.waitForTimeout(2000);
+              } else {
+                //console.log('[${getTimestamp()}] No more pages to scrape.');
+                break;
+              }
             }
+
           } catch (error) {
             console.warn(`[${getTimestamp()}] Error scraping ${url} on page ${pageNum}:`);
             throw error;
@@ -165,7 +175,22 @@ const getTeaInfo = async (teas, browser) => {
   console.log(`[${getTimestamp()}] Info scraping completed. updated ${updateCount} teas and failed to update ${errorCount} teas.`);
 }
 
+//handle pages that scroll instead of paginate.  count items stop scrolling if no more load.  easy 
+async function scrollProducts(page, productSelector, delay = 1000, max = 30) {
+  let previousCount = 0;
+  for (let i = 0; i < max; i++) {
+    const items = await page.$$(productSelector);
+    const currentCount = items.length;
 
+    if (currentCount > previousCount) {
+      previousCount = currentCount;
+      await page.evaluate(() => window.scrollBy(0, window.innerHeight));
+      await page.waitForTimeout(delay);
+    } else {
+      break; // no new items loaded
+    }
+  }
+}
 
 //upsert teas
 module.exports = {

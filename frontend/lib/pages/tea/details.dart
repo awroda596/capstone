@@ -121,7 +121,10 @@ class TeaInfo extends StatelessWidget {
                         'Price:',
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                      Text('${tea['price']} / 2 Oz.'),
+                      if (tea['vendor'] == 'What-Cha')
+                        Text('Price: ${tea['price']} per 25g'),
+                      if (tea['vendor'] != 'What-Cha')
+                        Text('Price: ${tea['price']} per 2 Oz.'),
                       if (tea['type'] != null) ...[
                         const SizedBox(height: 8),
                         Text(
@@ -347,4 +350,3 @@ class _WriteReviewDialogState extends State<WriteReviewDialog> {
     );
   }
 }
-

@@ -16,25 +16,10 @@ class _SearchPageState extends State<SearchPage> {
   final TextEditingController searchController = TextEditingController();
   String? selectedType;
   String? selectedVendor;
-
-  //deprecated, from old drop down
-  final List<String> types = [
-    '',
-    'White',
-    'Green',
-    'Oolong',
-    'Black',
-    'Puerh',
-    'Other',
-  ];
-  final List<String> vendors = [
-    '',
-    'Red Blossom Tea Company',
-    'Eco-Cha',
-    'What-Cha',
-    'Old Ways Tea',
-    'Yunnan Sourcing',
-  ];
+  Set<String> selectedSearchFields = {'name'};
+  Set<String> selectedTypes = {};
+  Set<String> selectedVendors = {};
+  double? minRating, maxRating, minPrice, maxPrice;
 
   bool isLoading = false;
   bool hasMore =
@@ -46,7 +31,6 @@ class _SearchPageState extends State<SearchPage> {
   String SelectedFilters = '';
   //search for teas, update interface.  used for pagination as well
   Future<void> searchAndUpdate({int page = 0}) async {
-    final searchText = '$SelectedFilters ${searchController.text}'.trim();
 
     setState(() {
       error = null;
@@ -54,8 +38,15 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     try {
-      final result = await searchTeas(
-        searchInput: searchText,
+      final result = await await searchTeas(
+        searchInput: searchController.text.trim(),
+        searchFields: selectedSearchFields,
+        types: selectedTypes,
+        vendors: selectedVendors,
+        minRating: minRating,
+        maxRating: maxRating,
+        minPrice: minPrice,
+        maxPrice: maxPrice,
         page: page,
         pageSize: pageSize,
       );
@@ -93,11 +84,38 @@ class _SearchPageState extends State<SearchPage> {
                 icon: const Icon(Icons.filter_list),
                 tooltip: 'Set filters',
                 onPressed: () {
-                  showFilterDialog(context, (filters) {
-                    setState(() {
-                      SelectedFilters = filters;
-                    });
-                  });
+                  showDialog(
+                    context: context,
+                    builder:
+                        (_) => FilterDialog(
+                          selectedSearchFields: selectedSearchFields,
+                          selectedTypes: selectedTypes,
+                          selectedVendors: selectedVendors,
+                          minRating: minRating,
+                          maxRating: maxRating,
+                          minPrice: minPrice,
+                          maxPrice: maxPrice,
+                          onApply: ({
+                            required searchFields,
+                            required types,
+                            required vendors,
+                            required minRating,
+                            required maxRating,
+                            required minPrice,
+                            required maxPrice,
+                          }) {
+                            setState(() {
+                              selectedSearchFields = searchFields;
+                              selectedTypes = types;
+                              selectedVendors = vendors;
+                              this.minRating = minRating;
+                              this.maxRating = maxRating;
+                              this.minPrice = minPrice;
+                              this.maxPrice = maxPrice;
+                            });
+                          },
+                        ),
+                  );
                 },
               ),
               IconButton(
@@ -159,7 +177,10 @@ class _SearchPageState extends State<SearchPage> {
                               Text(
                                 'Rating: ${(item['rating'] as num).toStringAsFixed(2)}',
                               ),
-                            Text('Price: ${item['price']} per 2 Oz.'),
+                            if(item['vendor'] == 'What-Cha')
+                              Text('Price: ${item['price']} per 25g'),
+                            if(item['vendor'] != 'What-Cha')
+                              Text('Price: ${item['price']} per 2 Oz.'),
                           ],
                         ),
                       ),
@@ -246,87 +267,212 @@ class _SearchPageState extends State<SearchPage> {
   }
 }
 
-//wip filter box:  right now it is button form but will be checkboxes later
-void showFilterDialog(
-  BuildContext context,
-  Function(String selectedFilters) onApply,
-) {
-  String? vendor;
-  String? type;
-  String? origin;
-  String? harvest;
+//brand new filter dialogue!
+// on a side note, it may have been better to simply  call this inside the actual class
 
-  showDialog(
-    context: context,
-    builder:
-        (context) => AlertDialog(
-          title: const Text('Filter Search'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+class FilterDialog extends StatefulWidget {
+  final Set<String> selectedSearchFields;
+  final Set<String> selectedTypes;
+  final Set<String> selectedVendors;
+  final double? minRating;
+  final double? maxRating;
+  final double? minPrice;
+  final double? maxPrice;
+  final void Function({
+    required Set<String> searchFields,
+    required Set<String> types,
+    required Set<String> vendors,
+    required double? minRating,
+    required double? maxRating,
+    required double? minPrice,
+    required double? maxPrice,
+  })
+  onApply;
+
+  const FilterDialog({
+    super.key,
+    required this.selectedSearchFields,
+    required this.selectedTypes,
+    required this.selectedVendors,
+    required this.minRating,
+    required this.maxRating,
+    required this.minPrice,
+    required this.maxPrice,
+    required this.onApply,
+  });
+
+  @override
+  State<FilterDialog> createState() => _FilterDialogState();
+}
+
+class _FilterDialogState extends State<FilterDialog> {
+  late Set<String> tempSearchFields;
+  late Set<String> tempTypes;
+  late Set<String> tempVendors;
+  late TextEditingController ratingMinController;
+  late TextEditingController ratingMaxController;
+  late TextEditingController priceMinController;
+  late TextEditingController priceMaxController;
+
+  @override
+  void initState() {
+    super.initState();
+    tempSearchFields = Set<String>.from(widget.selectedSearchFields);
+    tempTypes = Set<String>.from(widget.selectedTypes);
+    tempVendors = Set<String>.from(widget.selectedVendors);
+    ratingMinController = TextEditingController(
+      text: widget.minRating?.toString() ?? '',
+    );
+    ratingMaxController = TextEditingController(
+      text: widget.maxRating?.toString() ?? '',
+    );
+    priceMinController = TextEditingController(
+      text: widget.minPrice?.toString() ?? '',
+    );
+    priceMaxController = TextEditingController(
+      text: widget.maxPrice?.toString() ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    ratingMinController.dispose();
+    ratingMaxController.dispose();
+    priceMinController.dispose();
+    priceMaxController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Filters'),
+      scrollable: true,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Search Fields'),
+          ...[
+            'name',
+            'vendor',
+            'type',
+            'style',
+            'description',
+            'flavor_notes',
+            'harvest',
+            'origin',
+          ].map(
+            (field) => CheckboxListTile(
+              title: Text(field),
+              value: tempSearchFields.contains(field),
+              onChanged: (checked) {
+                setState(() {
+                  checked == true
+                      ? tempSearchFields.add(field)
+                      : tempSearchFields.remove(field);
+                });
+              },
+            ),
+          ),
+
+          const Divider(),
+          const Text('Tea Types'),
+          ...['White', 'Green', 'Oolong', 'Black', 'Pu-erh'].map(
+            (type) => CheckboxListTile(
+              title: Text(type),
+              value: tempTypes.contains(type),
+              onChanged: (checked) {
+                setState(() {
+                  checked == true
+                      ? tempTypes.add(type)
+                      : tempTypes.remove(type);
+                });
+              },
+            ),
+          ),
+
+          const Divider(),
+          const Text('Vendors'),
+          ...['Eco-Cha', 'Red Blossom Tea Company', 'What-Cha'].map(
+            (vendor) => CheckboxListTile(
+              title: Text(vendor),
+              value: tempVendors.contains(vendor),
+              onChanged: (checked) {
+                setState(() {
+                  checked == true
+                      ? tempVendors.add(vendor)
+                      : tempVendors.remove(vendor);
+                });
+              },
+            ),
+          ),
+
+          const Divider(),
+          const Text('Rating Range (0–10)'),
+          Row(
             children: [
-              DropdownButtonFormField<String>(
-                value: vendor,
-                decoration: const InputDecoration(labelText: 'Vendor'),
-                items:
-                    [
-                          'Red Blossom Tea Company',
-                          'Eco-Cha',
-                          'Yunnan Sourcing',
-                          'Crimson Lotus',
-                        ]
-                        .map((v) => DropdownMenuItem(value: v, child: Text(v)))
-                        .toList(),
-                onChanged: (value) => vendor = value,
+              Expanded(
+                child: TextField(
+                  controller: ratingMinController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Min'),
+                ),
               ),
-              DropdownButtonFormField<String>(
-                value: type,
-                decoration: const InputDecoration(labelText: 'Type'),
-                items:
-                    ['White', 'Pu-erh', 'Oolong', 'Green', 'Black']
-                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                        .toList(),
-                onChanged: (value) => type = value,
-              ),
-              DropdownButtonFormField<String>(
-                value: origin,
-                decoration: const InputDecoration(labelText: 'Origin'),
-                items:
-                    ['China', 'Japan', 'India']
-                        .map((o) => DropdownMenuItem(value: o, child: Text(o)))
-                        .toList(),
-                onChanged: (value) => origin = value,
-              ),
-              DropdownButtonFormField<String>(
-                value: harvest,
-                decoration: const InputDecoration(labelText: 'Harvest Season'),
-                items:
-                    ['Spring', 'Summer', 'Autumn', 'Winter']
-                        .map((h) => DropdownMenuItem(value: h, child: Text(h)))
-                        .toList(),
-                onChanged: (value) => harvest = value,
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: ratingMaxController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Max'),
+                ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final filters = [
-                  if (vendor != null) 'vendor:$vendor,',
-                  if (type != null) 'type:$type,',
-                  if (origin != null) 'origin:$origin,',
-                  if (harvest != null) 'harvest:$harvest,',
-                ].join(' ');
 
-                Navigator.pop(context);
-                onApply(filters);
-              },
-              child: const Text('Apply'),
-            ),
-          ],
+          const SizedBox(height: 16),
+          const Text('Price Range (\$ per 2 Oz.)'),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: priceMinController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Min'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: priceMaxController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Max'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
         ),
-  );
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            widget.onApply(
+              searchFields: tempSearchFields,
+              types: tempTypes,
+              vendors: tempVendors,
+              minRating: double.tryParse(ratingMinController.text),
+              maxRating: double.tryParse(ratingMaxController.text),
+              minPrice: double.tryParse(priceMinController.text),
+              maxPrice: double.tryParse(priceMaxController.text),
+            );
+          },
+          child: const Text('Apply'),
+        ),
+      ],
+    );
+  }
 }

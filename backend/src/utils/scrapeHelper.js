@@ -1,9 +1,11 @@
 const Tea = require("../models/tea");
 
 //product details pages various vastly from site to site, map scrapers for each site
+//rip my modular scraping :( )
 const descriptionScrapers = {
   'Red Blossom Tea Company': scrapeDescriptionRedBlossom,
-  'Eco-Cha': scrapeDescriptionEcoCha
+  'Eco-Cha': scrapeDescriptionEcoCha,
+  'What-Cha': scrapeDescriptionWhatCha
 };
 
 /*
@@ -47,7 +49,7 @@ async function scrapeDescriptionRedBlossom(page) {
           if (!label || !value) return;
           if (label.includes('origin')) {
             details.origin_raw = value;
-            deatils.orign = value; 
+            deatils.orign = value;
           } else if (label.includes('craft')) {
             details.style = value;
           } else if (label.includes('flavor')) {
@@ -115,6 +117,49 @@ async function scrapeDescriptionEcoCha(page) {
 
     return details;
   });
+}
+
+async function scrapeDescriptionWhatCha(page) {
+  try {
+    return await page.$eval('div.description[itemprop="description"]', (el) => {
+      const paragraphs = Array.from(el.querySelectorAll('p'));
+      const result = { description: '', tastingNotes: '', harvest: '', origin: '' };
+      let descriptionPara = [];
+    
+      for (const p of paragraphs) {
+        const text = p.innerText.trim();
+    
+        if (text.startsWith('Tasting Notes')) break;
+    
+        // Grab text with link text if any
+        const clone = p.cloneNode(true);
+        clone.querySelectorAll('a').forEach(a => {
+          const linkText = a.textContent;
+          a.replaceWith(linkText);
+        });
+        descriptionPara.push(clone.textContent.trim());
+      }
+    
+      result.description = descriptionPara.join('\n\n');
+    
+      paragraphs.forEach(p => {
+        const text = p.innerText.trim();
+    
+        if (text.startsWith('Tasting Notes')) {
+          result.flavorNotes = text.replace(/^Tasting Notes:\s*/, '');
+        } else if (text.startsWith('Harvest')) {
+          result.harvest = text.replace(/^Harvest:\s*/, '');
+        } else if (text.startsWith('Origin')) {
+          result.origin = text.replace(/^Origin:\s*/, '');
+        }
+      });
+    
+      return result;
+    });
+  } catch (fallbackError) {
+    // Final fallback: return minimal details
+    return { description: 'N/A' };
+  }
 }
 
 

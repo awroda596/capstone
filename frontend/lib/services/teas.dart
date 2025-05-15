@@ -73,14 +73,34 @@ Future<List<Map<String, dynamic>>> fetchReviews(String teaId) async {
   }
 }
 
+//more efficient version yay!
+//as opposed to parsing our seach string and collecting it into a json/map we do it properly with filters:
 Future<Map<String, dynamic>> searchTeas({
   required String searchInput,
+  required Set<String> searchFields,
+  required Set<String> types,
+  required Set<String> vendors,
+  required double? minRating,
+  required double? maxRating,
+  required double? minPrice,
+  required double? maxPrice,
   required int page,
   required int pageSize,
 }) async {
-  final query = buildQuery(searchInput);
-  query['offset'] = page * pageSize;
-  query['limit'] = pageSize;
+  final query = {
+    "search": searchInput,
+    "search_fields": searchFields.toList(),
+    "filters": {
+      if (types.isNotEmpty) "type": types.toList(),
+      if (vendors.isNotEmpty) "vendor": vendors.toList(),
+      if (minRating != null) "minRating": minRating,
+      if (maxRating != null) "maxRating": maxRating,
+      if (minPrice != null) "minPrice": minPrice,
+      if (maxPrice != null) "maxPrice": maxPrice,
+    },
+    "offset": page * pageSize,
+    "limit": pageSize,
+  };
 
   final uri = Uri.parse('$baseURI/api/search');
 
@@ -97,33 +117,6 @@ Future<Map<String, dynamic>> searchTeas({
   }
 }
 
-//build a structured query based off the query text
-//built with ChatGPT's help for parsing the query text.
-Map<String, dynamic> buildQuery(String input) {
-  final filters = <String, List<String>>{};
-  final searchTerms = <String>[];
-
-  for (final part in input.split(',')) {
-    //split query by commas
-    final trimmed = part.trim(); //trim
-    final colonIndex = trimmed.indexOf(
-      ':',
-    ); //split each sub query by : to split the field and the searchtext
-
-    if (colonIndex != -1) {
-      //re-assemble the query to group values in the same fields in json form
-      final key = trimmed.substring(0, colonIndex).trim().toLowerCase();
-      final value = trimmed.substring(colonIndex + 1).trim();
-      filters
-          .putIfAbsent(key, () => [])
-          .add(value); //if new key, create it, then ad the new value to it.
-    } else {
-      searchTerms.add(trimmed);
-    }
-  }
-
-  return {"search": searchTerms.join(' '), "filters": filters};
-}
 
 Future<Map<String, dynamic>> getTea(String teaID) async {
   final prefs = await SharedPreferences.getInstance();
