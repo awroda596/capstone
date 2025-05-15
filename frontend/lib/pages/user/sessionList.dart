@@ -475,6 +475,9 @@ class _TeaLogListState extends State<TeaLogList> {
   }
 }
 
+
+//Unfinished Standalone View Session
+/*
 class ViewSessionDialog extends StatefulWidget {
   final Map<String, dynamic> session;
   final VoidCallback onRefresh;
@@ -674,3 +677,4 @@ class _ViewSessionDialogState extends State<ViewSessionDialog> {
     );
   }
 }
+*/

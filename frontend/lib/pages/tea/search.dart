@@ -28,17 +28,15 @@ class _SearchPageState extends State<SearchPage> {
   final int pageSize = 20;
   List<dynamic> results = [];
   String? error;
-  String SelectedFilters = '';
   //search for teas, update interface.  used for pagination as well
   Future<void> searchAndUpdate({int page = 0}) async {
-
     setState(() {
       error = null;
       isLoading = true;
     });
 
     try {
-      final result = await await searchTeas(
+      final result = await searchTeas(
         searchInput: searchController.text.trim(),
         searchFields: selectedSearchFields,
         types: selectedTypes,
@@ -123,7 +121,13 @@ class _SearchPageState extends State<SearchPage> {
                 tooltip: 'Clear filters',
                 onPressed: () {
                   setState(() {
-                    SelectedFilters = '';
+                    selectedSearchFields = {'name'};
+                    selectedTypes = {};
+                    selectedVendors = {};
+                    minRating = null;
+                    maxRating = null;
+                    minPrice = null;
+                    maxPrice = null;
                   });
                 },
               ),
@@ -177,9 +181,9 @@ class _SearchPageState extends State<SearchPage> {
                               Text(
                                 'Rating: ${(item['rating'] as num).toStringAsFixed(2)}',
                               ),
-                            if(item['vendor'] == 'What-Cha')
+                            if (item['vendor'] == 'What-Cha')
                               Text('Price: ${item['price']} per 25g'),
-                            if(item['vendor'] != 'What-Cha')
+                            if (item['vendor'] != 'What-Cha')
                               Text('Price: ${item['price']} per 2 Oz.'),
                           ],
                         ),

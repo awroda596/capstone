@@ -262,26 +262,26 @@ async function findTeas({
     }
   });
   //rating
-  if (typeof filters.minRating === 'number' || typeof filters.maxRating === 'number') {
-    const ratingQuery = {};
-    if (typeof filters.minRating === 'number') ratingQuery.$gte = filters.minRating;
-    if (typeof filters.maxRating === 'number') ratingQuery.$lte = filters.maxRating;
-    query.$and.push({ rating: ratingQuery });
-  }
-  //price
-  if (typeof filters.minPrice === 'number' || typeof filters.maxPrice === 'number') {
-    const priceQuery = {};
-    if (typeof filters.minPrice === 'number') priceQuery.$gte = filters.minPrice;
-    if (typeof filters.maxPrice === 'number') priceQuery.$lte = filters.maxPrice;
-    query.$and.push({ price: priceQuery });
-  }
+
 
   if (query.$and.length === 0) delete query.$and;
 
-  const [results, total] = await Promise.all([
+   [results, total] = await Promise.all([
     Tea.find(query).skip(offset).limit(limit),
     Tea.countDocuments(query)
   ]);
+
+  if (typeof filters.minPrice === 'number' || typeof filters.maxPrice === 'number') {
+    results = results.filter((tea) => {
+       parsed = tea.price.replace(/[^0-9.]/g, '');
+      console.log(parsed); 
+      parsedN = parseFloat(parsed.trim()); 
+      if (isNaN(parsed)) return false;
+      if (typeof filters.minPrice === 'number' && parsedN < filters.minPrice) return false;
+      if (typeof filters.maxPrice === 'number' && parsedN > filters.maxPrice) return false;
+      return true;
+    });
+  }
 
   return {
     results,
