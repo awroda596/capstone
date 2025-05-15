@@ -68,7 +68,8 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
                   Text("Registration complete!"),
                 ],
               )
-              : Form(
+              : SingleChildScrollView(
+      child:Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -101,10 +102,8 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
                                   ? 'Min 6 characters'
                                   : null,
                     ),
-                    SizedBox(height: 12),
                     if (errorMessage.isNotEmpty)
                       Text(errorMessage, style: TextStyle(color: Colors.red)),
-                    SizedBox(height: 12),
                     ElevatedButton(
                       onPressed:
                           isSubmitting
@@ -127,7 +126,7 @@ class _RegistrationDialogState extends State<RegistrationDialog> {
                     ),
                   ],
                 ),
-              ),
+              ),),
       actions: [
         if (isRegistered)
           TextButton(

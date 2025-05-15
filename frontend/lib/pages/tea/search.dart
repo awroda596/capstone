@@ -267,9 +267,8 @@ class _SearchPageState extends State<SearchPage> {
   }
 }
 
-//brand new filter dialogue!
-// on a side note, it may have been better to simply  call this inside the actual class
-
+//filter dialogue working finally!
+//probably should have just kept it inside of the main class :/
 class FilterDialog extends StatefulWidget {
   final Set<String> selectedSearchFields;
   final Set<String> selectedTypes;
